@@ -1,0 +1,9 @@
+node_modules/
+.env
+storage/
+*.log
+recognition/cameras.json
+recognition/enroll_report.csv
+recognition/.venv/
+__pycache__/
+var/

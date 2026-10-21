@@ -1,0 +1,7 @@
+<% if (pager && pager.total > 0) { %>
+<div class="pager">
+  <span><%= pager.total %> <%= pager.total === 1 ? 'row' : 'rows' %>, page <%= pager.page %> of <%= pager.pages %></span>
+  <% if (pager.page > 1) { %><a href="<%= qs({ page: pager.page - 1 }) %>">Previous</a><% } %>
+  <% if (pager.page < pager.pages) { %><a href="<%= qs({ page: pager.page + 1 }) %>">Next</a><% } %>
+</div>
+<% } %>

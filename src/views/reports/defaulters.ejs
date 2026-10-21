@@ -1,0 +1,14 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Defaulters</h1><p>Students below <%= threshold %>% in a subject this semester.</p></div>
+  <div class="actions"><% if (can('reports', 'export')) { %><a class="btn btn-quiet" href="/reports/defaulters/export<%= qs({ format: 'xlsx', page: null }) %>"><%- ui.icon('download', 18) %>Excel</a><a class="btn btn-quiet" href="/reports/defaulters/export<%= qs({ format: 'pdf', page: null }) %>"><%- ui.icon('file', 18) %>PDF</a><% } %></div></div>
+<% if (user.role !== 'student') { %><form class="filters" method="get" action="/reports/defaulters" data-auto>
+  <div class="wide"><label for="section_id">Class</label><select id="section_id" name="section_id"><option value="">All classes</option><% options.sections.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.section_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <div class="wide"><label for="subject_id">Subject</label><select id="subject_id" name="subject_id"><option value="">All subjects</option><% options.subjects.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.subject_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <div><button class="btn btn-quiet" type="submit">Apply</button></div></form><% } %>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>Student</th><th>Class</th><th>Subject</th><th class="num">Held</th><th class="num">Attended</th><th class="num">Excused</th><th>Attendance</th></tr></thead><tbody>
+  <% rows.forEach(function (d) { %><tr><td><a class="person" href="/students/<%= d.student_id %>/attendance"><%- ui.avatar(d.full_name, 'sm') %><span><%= d.full_name %><small><%= d.register_no %></small></span></a></td><td><%= d.section_label %></td>
+    <td><b><%= d.subject_code %></b><br><span class="muted"><%= d.subject_name %></span></td><td class="num"><%= d.total_classes %></td><td class="num"><%= d.attended_classes %></td><td class="num"><%= d.excused_classes %></td><td><%- ui.pct(d.percentage, threshold) %></td></tr><% }) %>
+  <% if (!rows.length) { %><tr><td colspan="7" class="empty">Nobody is below <%= threshold %>% for these filters.</td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>

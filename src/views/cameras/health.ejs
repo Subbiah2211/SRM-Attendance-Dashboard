@@ -1,0 +1,17 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Cameras</h1><p>Latest health report and last recognition per camera.</p></div>
+  <div class="actions"><a class="btn btn-quiet" href="/master/cameras">Map cameras to classrooms</a><a class="btn btn-quiet" href="/unknown-detections">Unknown faces</a></div></div>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>Camera</th><th>Classroom</th><th>Health</th><th class="num">Latency</th><th>Reported</th><th>Last recognition</th></tr></thead><tbody>
+  <% cameras.forEach(function (c) { %><tr><td><b><%= c.camera_id %></b><br><span class="muted"><%= c.location_label %><%= c.enabled ? '' : ', disabled' %></span></td><td><%= c.room || 'Not mapped' %></td>
+    <td><span class="chip chip-<%= c.status === 'online' ? 'present' : c.status === 'offline' ? 'absent' : 'none' %>"><%= c.status ? c.status[0].toUpperCase() + c.status.slice(1) : 'No report' %></span></td>
+    <td class="num"><%= c.network_latency_ms === null ? '' : c.network_latency_ms + ' ms' %></td><td><%= dates.fmtDateTime(c.recorded_at, my.timezone) %></td><td><%= dates.fmtDateTime(c.last_event_at, my.timezone) || 'Never' %></td></tr><% }) %>
+  <% if (!cameras.length) { %><tr><td colspan="6" class="empty">No cameras are registered for this college.</td></tr><% } %>
+  </tbody></table></div></div>
+<div class="card flush"><h2>Recognitions that did not count, last 7 days</h2><table class="data">
+  <thead><tr><th>Reason</th><th class="num">Events</th><th>Latest</th></tr></thead><tbody>
+  <% const why = { no_class_scheduled: 'No class was scheduled in that room at that time', student_not_in_section: 'The student is not in the section that had the class', camera_unmapped: 'The camera is not mapped to a classroom', low_confidence: 'Confidence below the minimum', non_working_day: 'Holiday or non-working day', student_not_active: 'The student is not active', manual_record: 'The record was already set by hand' }; %>
+  <% ignored.forEach(function (i) { %><tr><td><%= why[i.ignored_reason] || i.ignored_reason %></td><td class="num"><%= i.events %></td><td><%= dates.fmtDateTime(i.last_at, my.timezone) %></td></tr><% }) %>
+  <% if (!ignored.length) { %><tr><td colspan="3" class="empty">Every recognition in the last 7 days matched a class.</td></tr><% } %>
+</tbody></table></div>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,19 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= entity.title %></h1></div>
+  <div class="actions"><% if (canAdd) { %><a class="btn" href="/master/<%= entityKey %>/new"><%- ui.icon('plus', 18) %>Add <%= entity.one %></a><% } %>
+    <% if (uploadType) { %><a class="btn<%= canAdd ? ' btn-quiet' : '' %>" href="/imports?type=<%= uploadType %>"><%- ui.icon('upload', 18) %>Upload from Excel or PDF</a>
+      <a class="btn btn-quiet" href="/imports/templates/<%= uploadType %>"><%- ui.icon('download', 18) %>Excel template</a><% } %></div></div>
+<form class="filters" method="get" action="/master/<%= entityKey %>"<%- filters.length ? ' data-auto' : '' %>>
+  <div class="wide"><label for="q">Search</label><input id="q" type="search" name="q" value="<%= q %>" placeholder="Name, code, number"></div>
+  <% filters.forEach(function (f) { %><div><label for="f_<%= f.name %>"><%= f.label %></label><select id="f_<%= f.name %>" name="<%= f.name %>"><option value="">All</option>
+    <% f.options.forEach(function (o) { %><option value="<%= o.value %>"<%= String(query[f.name] || '') === String(o.value) ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% }) %>
+  <div><button class="btn btn-quiet" type="submit"><%- ui.icon('search', 18) %>Search</button><% if (filters.length) { %><a href="/master/<%= entityKey %>">Clear</a><% } %></div>
+</form>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><% headers.forEach(function (h) { %><th><%= h %></th><% }) %><th></th></tr></thead><tbody>
+  <% rows.forEach(function (r) { %><tr><% headers.forEach(function (h, i) { %><td><%= r['c' + i] === null ? '' : r['c' + i] %></td><% }) %>
+    <td><span class="rowlinks"><% if (canEdit) { %><a href="/master/<%= entityKey %>/<%= encodeURIComponent(r.id) %>/edit">Edit</a><% } %>
+      <% if (canDelete) { %><form class="inline" method="post" action="/master/<%= entityKey %>/<%= encodeURIComponent(r.id) %>/delete" data-confirm="Delete this <%= entity.one %>?"><%- include('../partials/csrf') %><button class="btn btn-danger btn-small" type="submit">Delete</button></form><% } %></span></td></tr><% }) %>
+  <% if (!rows.length) { %><tr><td colspan="<%= headers.length + 1 %>" class="empty"><%= my.collegeId ? 'Nothing here yet.' : 'Choose a college to add to this list.' %></td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>

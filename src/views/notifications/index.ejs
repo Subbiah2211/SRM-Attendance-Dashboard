@@ -1,0 +1,8 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Notifications</h1></div>
+  <div class="actions"><% if (items.some(function (i) { return !i.is_read; })) { %><form class="inline" method="post" action="/notifications/read"><%- include('../partials/csrf') %><button class="btn btn-quiet" type="submit">Mark all as read</button></form><% } %></div></div>
+<div class="card flush"><table class="data"><tbody>
+  <% items.forEach(function (n) { %><tr><td><b><%= n.title %></b><%- n.is_read ? '' : ' <span class="chip chip-late">New</span>' %><br><%= n.message %><br><span class="muted"><%= dates.fmtDateTime(n.created_at, my.timezone) %></span></td></tr><% }) %>
+  <% if (!items.length) { %><tr><td class="empty">No notifications.</td></tr><% } %>
+</tbody></table><div class="pager"><% if (page > 1) { %><a href="<%= qs({ page: page - 1 }) %>">Newer</a><% } %><% if (items.length === 30) { %><a href="<%= qs({ page: page + 1 }) %>">Older</a><% } %></div></div>
+<%- include('../partials/bottom') %>

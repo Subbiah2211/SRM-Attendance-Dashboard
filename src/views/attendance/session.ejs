@@ -1,0 +1,33 @@
+<%- include('../partials/top') %>
+<% const s = session; const unmarked = students.filter(function (x) { return !x.status && !x.elsewhere; }).length; %>
+<div class="head"><div><h1><%= s.subject_code %> <%= s.subject_name %></h1>
+  <p><%= s.section_label %>. <%= dates.fmtDate(s.session_date) %>, period <%= s.period_no %> (<%= dates.fmtTime(s.start_time) %> to <%= dates.fmtTime(s.end_time) %>), <%= s.staff_name %><%= s.staff_id !== s.scheduled_staff_id ? ' as substitute' : '' %>, room <%= s.room %>.</p></div>
+  <div class="actions"><%- ui.session(s.status) %>
+    <% if (can('attendance', 'export')) { %><a class="btn btn-quiet" href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>/export?format=xlsx"><%- ui.icon('download', 18) %>Excel</a><a class="btn btn-quiet" href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>/export?format=pdf"><%- ui.icon('file', 18) %>PDF</a><% } %></div></div>
+<% if (user.role !== 'student') { %><div class="kpis">
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('check', 22) %></span><div><b><%= s.present %></b><span>present, <%= s.late %> late</span></div></div>
+  <div class="kpi t-absent"><span class="kpi-icon"><%- ui.icon('cross', 22) %></span><div><b><%= s.absent %></b><span>absent</span></div></div>
+  <div class="kpi t-excused"><span class="kpi-icon"><%- ui.icon('shield', 22) %></span><div><b><%= s.excused %></b><span>excused</span></div></div>
+  <div class="kpi <%= unmarked && s.status !== 'scheduled' ? 't-late' : 't-idle' %>"><span class="kpi-icon"><%- ui.icon('clock', 22) %></span><div><b><%= unmarked %></b><span>not marked</span></div></div>
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('users', 22) %></span><div><b><%= s.strength %></b><span>on the roll</span></div></div></div><% } %>
+<% if (s.status === 'needs_manual') { %><div class="flash flash-error"><%- ui.icon('alert') %><span>This period was not closed automatically, so nobody was marked absent. <%= canModify ? 'Mark it by hand below.' : 'The staff member or HOD needs to mark it by hand.' %></span></div><% } %>
+<form method="post" action="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>/manual">
+  <%- include('../partials/csrf') %>
+  <% if (canModify) { %><div class="actions" style="margin-bottom:12px"><span class="muted">Mark by hand:</span>
+    <button class="btn btn-quiet btn-small" type="button" data-mark-all="present">Set unmarked to present</button>
+    <button class="btn btn-quiet btn-small" type="button" data-mark-all="absent">Set unmarked to absent</button></div><% } %>
+  <div class="card flush"><div class="scroll"><table class="data">
+    <thead><tr><th>Roll</th><th>Student</th><th>Status</th><th>First seen</th><th>Last seen</th><th>Source</th><th class="num">Confidence</th><% if (canModify) { %><th>Set by hand</th><% } %><th></th></tr></thead><tbody>
+    <% students.forEach(function (x) { %><tr><td><%= x.roll_no || '' %></td>
+      <td><span class="person"><%- ui.avatar(x.full_name, 'sm') %><span><% if (user.role === 'student') { %><b><%= x.full_name %></b><% } else { %><a href="/students/<%= x.student_id %>/attendance"><%= x.full_name %></a><% } %><small><%= x.register_no %><%= x.enrollment_status === 'opted_out' ? ', opted out: manual only' : (!x.face_registered ? ', no face registered: manual only' : '') %></small></span></span></td>
+      <td><% if (!x.status && x.elsewhere) { %><span class="chip chip-s-closed">In <%= x.elsewhere %></span><% } else { %><%- ui.status(x.status) %><% } %></td><td><%= dates.fmtClock(x.entry_time, s.timezone) %></td><td><%= dates.fmtClock(x.exit_time, s.timezone) %></td>
+      <td><%= x.attendance_source === 'ai' ? 'AI' : x.attendance_source === 'manual' ? 'By hand' : (x.attendance_source || '') %></td>
+      <td class="num"><%= x.confidence === null || x.confidence === undefined ? '' : Number(x.confidence).toFixed(2) %></td>
+      <% if (canModify) { %><td><% if (x.elsewhere) { %><span class="muted">marked in <%= x.elsewhere %></span><% } else { %><select name="status[<%= x.student_id %>]" data-mark aria-label="Status for <%= x.full_name %>" style="min-width:118px;min-height:34px;padding:4px 8px"><option value="">Leave</option>
+        <% statuses.forEach(function (st) { %><option value="<%= st %>"><%= st[0].toUpperCase() + st.slice(1) %></option><% }) %></select><% } %></td><% } %>
+      <td><% if (x.attendance_id) { %><a href="/attendance/records/<%= x.attendance_id %>">History</a><% } %></td></tr><% }) %>
+    <% if (!students.length) { %><tr><td colspan="9" class="empty">No students are on the roll of this section.</td></tr><% } %>
+    </tbody></table></div></div>
+  <% if (canModify) { %><button class="btn" type="submit">Save marks and close the period</button> <span class="muted">Marks set by hand are never changed by the cameras.</span><% } %>
+</form>
+<%- include('../partials/bottom') %>

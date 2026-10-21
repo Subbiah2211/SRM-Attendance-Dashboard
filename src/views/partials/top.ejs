@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= title %> | Attendance register</title>
+<link rel="preload" href="/vendor/fonts/plus-jakarta-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/app.css">
+<script src="/static/js/theme.js"></script>
+</head>
+<body class="<%= user ? 'app' : 'public' %>">
+<% if (user) { %>
+<a class="skip" href="#main">Skip to content</a>
+<div class="scrim" data-nav-close></div>
+<aside class="side" id="side" aria-label="Main menu">
+  <a class="brand" href="/dashboard"><%- ui.logo() %><span><b>Attendance register</b><small><%= my.collegeName || 'All colleges' %></small></span></a>
+  <nav class="nav">
+    <% menu.forEach(function (g) { %>
+      <% if (!g.children) { %>
+        <a class="nav-link" href="<%= g.href %>"<%- g.active ? ' aria-current="page"' : '' %>><%- ui.icon(g.icon) %><span class="label"><%= g.label %></span></a>
+      <% } else { %>
+        <details class="nav-group" data-group="<%= g.key %>"<%- g.active ? ' open data-active' : '' %>>
+          <summary class="nav-link<%= g.active ? ' is-active' : '' %>"><%- ui.icon(g.icon) %><span class="label"><%= g.label %></span><span class="chev"><%- ui.icon('chevron', 16) %></span></summary>
+          <div class="nav-sub">
+            <% g.children.forEach(function (c) { %><a href="<%= c.href %>"<%- c.active ? ' aria-current="page"' : '' %>><%- ui.icon(c.icon, 16) %><span><%= c.label %></span></a><% }) %>
+          </div>
+        </details>
+      <% } %>
+    <% }) %>
+  </nav>
+  <div class="side-user">
+    <%- ui.avatar(user.name || user.username) %>
+    <span class="who"><b><%= user.name || user.username %></b><small><%= ui.role(user.role) %></small></span>
+    <form class="inline" method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="icon-btn" type="submit" aria-label="Sign out" title="Sign out"><%- ui.icon('logout') %></button></form>
+  </div>
+</aside>
+<div class="shell">
+  <header class="top">
+    <button class="icon-btn" type="button" data-nav-toggle aria-controls="side" aria-label="Show or hide the menu"><%- ui.icon('menu', 22) %></button>
+    <nav class="crumbs" aria-label="You are here">
+      <span class="lead"><%= my.collegeName || 'All colleges' %></span>
+      <% crumbs.forEach(function (c, i) { %><span class="sep">/</span><% if (i === crumbs.length - 1) { %><b><%= c %></b><% } else { %><span><%= c %></span><% } %><% }) %>
+      <% if (!crumbs.length) { %><span class="sep">/</span><b><%= title %></b><% } %>
+    </nav>
+    <div class="top-right">
+      <% if (user.role === 'superadmin' && my.collegeId) { %>
+        <form class="pill" method="post" action="/colleges/0/enter"><input type="hidden" name="_csrf" value="<%= csrfToken %>">Working in <%= my.collegeName %> <button type="submit">Leave</button></form>
+      <% } %>
+      <button class="icon-btn fs-only" type="button" data-fs-toggle aria-label="Enter or leave full screen" title="Full screen"><span class="fs-off"><%- ui.icon('expand') %></span><span class="fs-on"><%- ui.icon('shrink') %></span></button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="Switch between light and dark" title="Light or dark"><span class="only-light"><%- ui.icon('moon') %></span><span class="only-dark"><%- ui.icon('sun') %></span></button>
+      <% if (can('notifications')) { %><a class="icon-btn" href="/notifications" aria-label="Notifications<%= unread ? ', ' + unread + ' unread' : '' %>" title="Notifications"><%- ui.icon('bell') %><% if (unread) { %><span class="count"><%= unread > 99 ? '99+' : unread %></span><% } %></a><% } %>
+      <details class="menu">
+        <summary aria-label="Account menu"><%- ui.avatar(user.name || user.username, 'sm') %><span class="name"><%= user.name || user.username %></span><%- ui.icon('chevron', 16) %></summary>
+        <div class="menu-pop">
+          <div class="me"><b><%= user.name || user.username %></b><span class="muted"><%= ui.role(user.role) %>, <%= user.username %></span></div>
+          <a href="/password"><%- ui.icon('key', 18) %>Change password</a>
+          <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button type="submit"><%- ui.icon('logout', 18) %>Sign out</button></form>
+        </div>
+      </details>
+    </div>
+  </header>
+  <div class="fs-bar" role="status"><%- ui.icon('expand', 18) %><span>Full screen is off, so the browser's tabs and address bar are showing.</span><button class="btn btn-small" type="button" data-fs-toggle>Go full screen</button></div>
+  <main id="main" tabindex="-1">
+  <% if (flash) { %><div class="flash flash-<%= flash.kind === 'error' ? 'error' : 'ok' %>" role="status"><%- ui.icon(flash.kind === 'error' ? 'alert' : 'check') %><span><%= flash.message %></span></div><% } %>
+<% } else { %>
+<div class="auth">
+  <aside class="auth-art">
+    <div class="brand"><%- ui.logo(40) %><span><b>Attendance register</b><small>AI video based attendance</small></span></div>
+    <div class="auth-copy">
+      <h2>Every period marked, without a roll call.</h2>
+      <p>Classroom cameras recognise students, the timetable says which class is running, and the register fills itself in. Staff step in only for exceptions.</p>
+    </div>
+    <%- include('auth-art') %>
+  </aside>
+  <div class="auth-main">
+<% } %>

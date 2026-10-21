@@ -1,0 +1,33 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Uploads</h1><p>Load master data from Excel or PDF. Nothing is saved until you check the preview and commit.</p></div></div>
+<% if (canEdit) { %>
+<div class="cols">
+  <form class="card" method="post" action="/imports" enctype="multipart/form-data">
+    <h2>Upload a file</h2>
+    <%- include('../partials/csrf') %>
+    <div class="field"><label for="import_type">What the file contains</label><select id="import_type" name="import_type" required>
+      <% types.forEach(function (t) { %><option value="<%= t.key %>"<%= preselect === t.key ? ' selected' : '' %>><%= t.label %></option><% }) %></select></div>
+    <div class="field"><label for="file">File</label><input id="file" type="file" name="file" accept=".xlsx,.pdf" required>
+      <div class="hint">Excel (.xlsx) or a text-based PDF. Scanned PDFs cannot be read; use the Excel template for those.</div></div>
+    <div class="field"><label for="effective_from">Timetable only: in effect from</label><input id="effective_from" type="date" name="effective_from" value="<%= defaultFrom %>" min="<%= dates.addDays(defaultFrom, -1) %>">
+      <div class="hint">A timetable upload replaces the whole timetable of each section in the file from this date. Earlier attendance is kept.</div></div>
+    <button class="btn" type="submit"><%- ui.icon('upload', 18) %>Upload and check</button>
+  </form>
+  <div class="card"><h2>Templates and order</h2>
+    <p>Upload in this order, because later files refer to earlier ones. Periods, programs, academic years and semesters are set up by hand under Academic setup and Master data.</p>
+    <ol class="steps"><% types.forEach(function (t) { %><li><b><%= t.label %></b>: <a href="/imports/templates/<%= t.key %>">Excel template</a><%= t.key === 'timetable' ? ' (row, grid and class sheet layouts)' : t.key === 'allocation' ? ' (rows, or the class sheet)' : '' %></li><% }) %></ol>
+    <p style="margin:12px 0 0"><b>Class timetable sheet.</b> Upload the sheet your department publishes (PDF or Excel) as Timetable: the day and hour grid becomes the timetable, and the subject and staff table under it becomes the allocation for that class and academic year. You check and commit them one after the other.</p>
+    <p style="margin:12px 0 0"><b>Staff and student lists.</b> Use the template, or upload the list as your office prints it (Excel or PDF). A class list can give its programme, semester and section once in the heading above the table (for example "SEMESTER : V - CSE 3"); a staff list can be headed "Department of ...". Column names such as "Register Number", "Name of the Student", "Father's Name", "Employee ID" and "Name of the Faculty" are recognised.</p>
+    <p class="muted" style="margin:12px 0 0">New staff and students get their username as the first password unless the file has a password column. They must change it at first sign-in.</p>
+  </div>
+</div>
+<% } %>
+<div class="card flush"><h2>History</h2><div class="scroll"><table class="data">
+  <thead><tr><th>Upload</th><th>Type</th><th>File</th><th class="num">Rows</th><th class="num">Errors</th><th>Status</th><th>By</th><th>When</th></tr></thead><tbody>
+  <% batches.forEach(function (b) { %><tr><td><a href="/imports/<%= b.batch_id %>">Upload <%= b.batch_id %></a></td><td><%= b.import_type %></td><td><%= b.file_name %> <span class="muted">(<%= b.file_type %><%= b.layout === 'grid' ? ', grid' : '' %>)</span></td>
+    <td class="num"><%= b.total_rows %></td><td class="num"><%= b.error_rows %></td>
+    <td><%= b.status === 'validated' ? 'Waiting for commit' : b.status[0].toUpperCase() + b.status.slice(1) %><%= b.status === 'committed' ? ': ' + b.inserted_rows + ' added, ' + b.updated_rows + ' updated' : '' %></td>
+    <td><%= b.uploaded_by_name %></td><td><%= dates.fmtDateTime(b.uploaded_at, my.timezone) %></td></tr><% }) %>
+  <% if (!batches.length) { %><tr><td colspan="8" class="empty">No uploads yet.</td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>

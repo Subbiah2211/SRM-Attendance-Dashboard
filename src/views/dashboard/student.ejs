@@ -1,0 +1,25 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>My attendance</h1><p><%= dates.fmtDate(date) %></p></div>
+  <div class="actions"><a class="btn btn-quiet" href="/students/me/attendance"><%- ui.icon('timetable', 18) %>Date-wise history</a></div></div>
+<% alerts.forEach(function (a) { %><div class="flash flash-error"><%- ui.icon('alert') %><span>Your attendance in <b><%= a.subject_code %> <%= a.subject_name %></b> is <%= a.percentage %>%, below the required <%= threshold %>%.</span></div><% }) %>
+<div class="kpis">
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('gauge', 22) %></span><div><b><%= overall.percentage === null ? 'No marks' : overall.percentage + '%' %></b><span>this semester, all subjects</span></div><div class="meter"><i style="width:<%= overall.percentage || 0 %>%"></i></div></div>
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('check', 22) %></span><div><b><%= overall.attended %> of <%= overall.total %></b><span>classes attended</span></div></div>
+  <div class="kpi <%= overall.below ? 't-absent alarm' : 't-idle' %>"><span class="kpi-icon"><%- ui.icon('alert', 22) %></span><div><b><%= overall.below %></b><span>subjects below <%= threshold %>%</span></div></div>
+</div>
+<div class="cols">
+  <div class="card flush" <%- isToday ? 'data-live' : '' %>><h2>Today's periods</h2><table class="data">
+    <thead><tr><th>Period</th><th>Subject</th><th>Staff</th><th>Status</th></tr></thead><tbody>
+    <% sessions.forEach(function (s) { %><tr><td class="nw"><b>Period <%= s.period_no %></b><br><span class="muted"><%= dates.fmtTime(s.start_time) %></span></td><td><b><%= s.subject_code %></b><br><span class="muted"><%= s.subject_name %></span></td><td><%= s.staff_name %></td>
+      <td><%- s.my_status ? ui.status(s.my_status) : (s.status === 'closed' ? ui.status(null) : '<span class="muted">Not closed yet</span>') %></td></tr><% }) %>
+    <% if (!sessions.length) { %><tr><td colspan="4" class="empty">No classes today.</td></tr><% } %>
+    </tbody></table></div>
+  <div class="card flush"><h2>By subject</h2><table class="data">
+    <thead><tr><th>Subject</th><th class="num">Attended</th><th>Attendance</th><th>To reach <%= threshold %>%</th></tr></thead><tbody>
+    <% subjects.forEach(function (s) { const need = s.percentage !== null && s.percentage < threshold ? Math.max(0, Math.ceil((threshold / 100 * s.total_classes - s.attended_classes) / (1 - threshold / 100))) : 0; %>
+      <tr><td><b><%= s.subject_code %></b><br><span class="muted"><%= s.subject_name %></span></td><td class="num"><%= s.attended_classes %> of <%= s.total_classes %></td><td><%- ui.pct(s.percentage, threshold) %></td>
+      <td><%= need ? 'Attend the next ' + need + ' classes' : 'On track' %></td></tr><% }) %>
+    <% if (!subjects.length) { %><tr><td colspan="4" class="empty">No attendance has been recorded for you yet.</td></tr><% } %>
+    </tbody></table></div>
+</div>
+<%- include('../partials/bottom') %>

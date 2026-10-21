@@ -1,0 +1,23 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Class swaps</h1><p>A substitute takes one class on one date. Attendance is unchanged; the substitute is shown as the staff member for that date.</p></div></div>
+<% if (canRequest && slots.length) { %>
+<form class="filters" method="post" action="/class-swaps">
+  <%- include('../partials/csrf') %>
+  <div class="wide" style="flex-basis:340px"><label for="timetable_id">Class</label><select id="timetable_id" name="timetable_id" required><option value="">Choose</option>
+    <% slots.forEach(function (s) { %><option value="<%= s.timetable_id %>"><%= dayNames[s.day_of_week] %> period <%= s.period_no %>: <%= s.subject_code %>, <%= s.section_label %><%= user.role === 'staff' ? '' : ' (' + s.staff_name + ')' %></option><% }) %></select></div>
+  <div><label for="swap_date">Date</label><input id="swap_date" type="date" name="swap_date" min="<%= today %>" required></div>
+  <div class="wide"><label for="replacement_staff_id">Substitute</label><select id="replacement_staff_id" name="replacement_staff_id" required><option value="">Choose</option>
+    <% staff.forEach(function (o) { %><option value="<%= o.value %>"><%= o.label %></option><% }) %></select></div>
+  <div class="wide"><label for="reason">Reason</label><input id="reason" type="text" name="reason" maxlength="300"></div>
+  <div><button class="btn" type="submit"><%- ui.icon('swap', 18) %>Ask for a substitute</button></div>
+</form>
+<% } %>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>Date</th><th>Class</th><th>From</th><th>Substitute</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>
+  <% swaps.forEach(function (s) { %><tr><td class="nw"><%= dates.fmtDate(s.swap_date) %><br><span class="muted">Period <%= s.period_no %></span></td><td><%= s.subject_code %><br><span class="muted"><%= s.section_label %></span></td>
+    <td><%= s.original_name %></td><td><%= s.replacement_name %></td><td><%= s.reason || '' %></td><td><span class="chip <%= s.status === 'approved' ? 'chip-present' : s.status === 'rejected' ? 'chip-absent' : 'chip-late' %>"><%= s.status[0].toUpperCase() + s.status.slice(1) %></span></td>
+    <td><% if (canDecide && s.status === 'pending') { %><form class="inline" method="post" action="/class-swaps/<%= s.swap_id %>/decision"><%- include('../partials/csrf') %>
+      <button class="btn btn-small" type="submit" name="decision" value="approve">Approve</button> <button class="btn btn-danger btn-small" type="submit" name="decision" value="reject">Reject</button></form><% } %></td></tr><% }) %>
+  <% if (!swaps.length) { %><tr><td colspan="7" class="empty">No substitution requests.</td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>

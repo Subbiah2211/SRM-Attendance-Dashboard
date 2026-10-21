@@ -1,0 +1,23 @@
+<%- include('../partials/top') %>
+<div class="head"><div class="person"><%- ui.avatar(student.full_name) %><div><h1><%= student.full_name %></h1><p><%= student.register_no %><%= student.section_label ? ', ' + student.section_label : '' %><%= student.enrollment_status !== 'active' ? ', ' + student.enrollment_status.replace('_', ' ') : '' %></p></div></div></div>
+<div class="card flush"><h2>By subject</h2><div class="scroll"><table class="data">
+  <thead><tr><th>Subject</th><th class="num">Semester</th><th class="num">Held</th><th class="num">Attended</th><th class="num">Late</th><th class="num">Absent</th><th class="num">Excused</th><th>Attendance</th><th></th></tr></thead><tbody>
+  <% subjects.forEach(function (s) { %><tr><td><%= s.subject_code %> <span class="muted"><%= s.subject_name %></span></td><td class="num"><%= s.semester_no %></td><td class="num"><%= s.total_classes %></td><td class="num"><%= s.attended_classes %></td>
+    <td class="num"><%= s.late_classes %></td><td class="num"><%= s.absent_classes %></td><td class="num"><%= s.excused_classes %></td><td><%- ui.pct(s.percentage, threshold) %></td><td><%= s.percentage !== null && s.percentage < threshold ? 'Below ' + threshold + '%' : '' %></td></tr><% }) %>
+  <% if (!subjects.length) { %><tr><td colspan="9" class="empty">No attendance recorded yet.</td></tr><% } %>
+  </tbody></table></div></div>
+<form class="filters" method="get"><div><label for="from">From</label><input id="from" type="date" name="from" value="<%= from %>"></div><div><label for="to">To</label><input id="to" type="date" name="to" value="<%= to %>"></div><div><button class="btn btn-quiet" type="submit">Show</button></div></form>
+<div class="card flush"><h2>Date-wise</h2><div class="scroll"><table class="data">
+  <thead><tr><th>Date</th><th>Period</th><th>Subject</th><th>Status</th><th>Source</th><th></th></tr></thead><tbody>
+  <% records.forEach(function (r) { %><tr><td class="nw"><%= dates.fmtDate(r.attendance_date) %></td><td><%= r.period_no %></td><td><%= r.subject_code %> <span class="muted"><%= r.subject_name %></span></td><td><%- ui.status(r.status) %></td>
+    <td><%= r.attendance_source === 'ai' ? 'AI' : 'By hand' %></td><td><a href="/attendance/records/<%= r.attendance_id %>">History</a></td></tr><% }) %>
+  <% if (!records.length) { %><tr><td colspan="6" class="empty">No records in this range.</td></tr><% } %>
+  </tbody></table></div></div>
+<div class="card"><div class="card-head"><h2>Face enrolment</h2>
+    <% if (canResetFace && (face.embeddings || facePhotos.length)) { %><form class="inline" method="post" action="/students/<%= student.student_id %>/enrolment/reset" data-confirm="Clear this student's face enrolment? Their photos and face data are deleted and they must enrol again."><%- include('../partials/csrf') %><button class="btn btn-danger btn-small" type="submit">Reset enrolment</button></form><% } %></div>
+  <% if (face.embeddings) { %><p><span class="chip chip-present">Enrolled</span> <%= face.embeddings %> photos stored as face data, last on <%= dates.fmtDateTime(face.enrolled_at, my.timezone) %>.</p>
+  <% } else { %><p><span class="chip chip-absent">Not enrolled</span> <%= student.enrollment_status === 'opted_out' ? 'This student opted out of camera attendance and is marked by hand.' : 'The student is asked to enrol at their next sign-in. Until then they are marked by hand.' %></p><% } %>
+  <% if (facePhotos.length) { %><div class="shots"><% facePhotos.forEach(function (f) { %><div class="shot"><div class="shot-frame"><img src="/students/<%= student.student_id %>/photos/<%= f %>" alt="Enrolment photo of <%= student.full_name %>, <%= f.replace('.jpg', '') %>" loading="lazy"></div><b><%= f.replace('.jpg', '')[0].toUpperCase() + f.replace('.jpg', '').slice(1) %></b></div><% }) %></div>
+  <p class="muted" style="margin:10px 0 0">Check that the photos show this student. If they show someone else, reset the enrolment.</p><% } %>
+</div>
+<%- include('../partials/bottom') %>

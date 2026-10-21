@@ -1,0 +1,42 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Upload <%= batch.batch_id %>: <%= label %></h1>
+  <p><%= batch.file_name %>, uploaded by <%= batch.uploaded_by_name %> on <%= dates.fmtDateTime(batch.uploaded_at, my.timezone) %><%= batch.effective_from ? '. In effect from ' + batch.effective_from : '' %>.</p></div>
+  <div class="actions">
+    <% if (canEdit) { %>
+      <form class="inline" method="post" action="/imports/<%= batch.batch_id %>/commit" data-confirm="Write <%= batch.valid_rows %> rows to the live tables?"><%- include('../partials/csrf') %>
+        <button class="btn" type="submit"<%= batch.error_rows || !batch.total_rows ? ' disabled title="Fix the errors first"' : '' %>>Commit <%= batch.valid_rows %> rows</button></form>
+      <form class="inline" method="post" action="/imports/<%= batch.batch_id %>/cancel" data-confirm="Cancel this upload? Nothing will be written."><%- include('../partials/csrf') %><button class="btn btn-danger" type="submit">Cancel upload</button></form>
+    <% } %>
+    <% if (batch.error_rows) { %><a class="btn btn-quiet" href="/imports/<%= batch.batch_id %>/errors"><%- ui.icon('download', 18) %>Errors as Excel</a><% } %>
+  </div></div>
+<% if (batch.linked_batch_id) { %><div class="flash flash-ok"><%- ui.icon('layers') %><span>
+  <% if (batch.import_type === 'allocation') { %><b>Step 1 of 2.</b> This is the subject and staff table of the class timetable sheet. Commit it first, then the timetable in <a href="/imports/<%= batch.linked_batch_id %>">upload <%= batch.linked_batch_id %></a>.
+  <% } else { %><b>Step 2 of 2.</b> This is the day and hour grid of the class timetable sheet. Its subjects and staff come from <a href="/imports/<%= batch.linked_batch_id %>">upload <%= batch.linked_batch_id %></a>: commit that one first.<% } %></span></div><% } %>
+<% if (missingCount || missingBlockers.length) { %><div class="flash flash-error"><%- ui.icon('alert') %><span>
+  <b>This sheet names <%= missingCount %> <%= missingCount === 1 ? 'thing' : 'things' %> the college has not entered yet</b> (programme, section, halls, hours or staff). That is why rows say "does not exist".
+  <% missingBlockers.forEach(function (m) { %><br><%= m %><% }) %>
+  <% if (missingCount) { %><br><% if (canSetUp) { %><a class="btn btn-small" style="margin-top:8px" href="/imports/<%= batch.batch_id %>/setup">Set up what is missing</a><% } else { %>Ask the college admin to open this upload and set them up.<% } %><% } %></span></div><% } %>
+<div class="stats">
+  <div class="stat"><b><%= batch.total_rows %></b><span>rows read</span></div>
+  <div class="stat"><b><%= batch.valid_rows %></b><span>valid</span></div>
+  <div class="stat<%= batch.error_rows ? ' warn' : '' %>"><b><%= batch.error_rows %></b><span>with errors</span></div>
+  <div class="stat"><b><%= batch.status === 'validated' ? 'Waiting' : batch.status[0].toUpperCase() + batch.status.slice(1) %></b><span><%= batch.status === 'committed' ? batch.inserted_rows + ' added, ' + batch.updated_rows + ' updated' : 'status' %></span></div>
+</div>
+<% if (batch.status === 'validated') { %>
+<nav class="tabs"><a href="/imports/<%= batch.batch_id %>"<%- onlyInvalid ? '' : ' aria-current="page"' %>>All rows</a><a href="/imports/<%= batch.batch_id %>?show=errors"<%- onlyInvalid ? ' aria-current="page"' : '' %>>Rows with errors</a></nav>
+<% if (batch.file_type === 'pdf' || batch.layout === 'class_sheet') { %><p class="muted">Highlighted rows are ones to look at before you commit: a lab with no room given, a subject with no code, or several halls for one person.</p><% } %>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th class="num">Row</th><th>Check</th><% columns.forEach(function (c) { %><th><%= c.name %><%= c.required ? '' : ' (optional)' %></th><% }) %></tr></thead><tbody>
+  <% rows.forEach(function (r) { const fid = 'row' + r.row_id; const editable = canEdit && (r.status === 'invalid' || r.uncertain); %><tr>
+    <td class="num"><%= r.row_no %></td>
+    <td style="min-width:250px"><% if (r.status === 'valid') { %><span class="chip chip-valid">Valid</span><%= r.uncertain ? ' check the highlighted cells' : '' %><% } else { %><span class="chip chip-invalid">Needs fixing</span><ul class="errlist" style="margin-top:6px"><% r.errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul><% } %>
+      <% if (canEdit) { %><div class="rowlinks" style="justify-content:flex-start;margin-top:8px">
+        <% if (editable) { %><form id="<%= fid %>" class="inline" method="post" action="/imports/<%= batch.batch_id %>/rows/<%= r.row_id %><%= onlyInvalid ? '?show=errors' : '' %>"><%- include('../partials/csrf') %><button class="btn btn-small" type="submit">Save row</button></form><% } %>
+        <% if (r.status === 'invalid') { %><form class="inline" method="post" action="/imports/<%= batch.batch_id %>/rows/<%= r.row_id %>/delete<%= onlyInvalid ? '?show=errors' : '' %>"><%- include('../partials/csrf') %><button class="btn btn-danger btn-small" type="submit">Drop row</button></form><% } %></div><% } %></td>
+    <% columns.forEach(function (c) { %><td class="nw cell-edit<%= r.uncertain ? ' unsure' : '' %>">
+      <% if (editable) { %><input form="<%= fid %>" type="text" name="raw[<%= c.name %>]" value="<%= r.raw[c.name] || '' %>" aria-label="<%= c.name %>, row <%= r.row_no %>"><% } else { %><%= r.raw[c.name] || '' %><% } %></td><% }) %>
+  </tr><% }) %>
+  <% if (!rows.length) { %><tr><td colspan="<%= columns.length + 2 %>" class="empty"><%= onlyInvalid ? 'No rows with errors. The upload can be committed.' : 'No rows.' %></td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<% } else { %><div class="card empty">This upload is <%= batch.status %>. <a href="/imports">Back to uploads</a></div><% } %>
+<%- include('../partials/bottom') %>

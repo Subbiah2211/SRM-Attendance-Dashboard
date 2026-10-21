@@ -1,0 +1,12 @@
+<%# Attendance grouped by a category the user picks. %>
+<% const names = { department: 'Department', class: 'Class', subject: 'Subject', staff: 'Staff', period: 'Period', date: 'Date' }; %>
+<div class="card flush">
+  <div class="card-head"><h2>Attendance by <%= names[by].toLowerCase() %></h2>
+    <nav class="tabs" aria-label="Group by"><% byOptions.forEach(function (k) { %><a href="/dashboard<%= qs({ by: k }) %>"<%- k === by ? ' aria-current="page"' : '' %>><%= names[k] %></a><% }) %></nav></div>
+  <div class="scroll"><table class="data">
+    <thead><tr><th><%= names[by] %></th><th class="num">Periods</th><th class="num">Present</th><th class="num">Late</th><th class="num">Absent</th><th class="num">Excused</th><th>Attendance</th></tr></thead><tbody>
+    <% breakdown.forEach(function (r) { %><tr><td><b><%= r.label %></b><% if (r.needs_manual) { %><br><span class="muted"><%= r.needs_manual %> need manual marking</span><% } %></td>
+      <td class="num"><%= r.sessions %></td><td class="num"><%= r.present %></td><td class="num"><%= r.late %></td><td class="num"><%= r.absent %></td><td class="num"><%= r.excused %></td><td><%- ui.pct(r.percentage, threshold) %></td></tr><% }) %>
+    <% if (!breakdown.length) { %><tr><td colspan="7" class="empty">No classes match these filters in this period.</td></tr><% } %>
+  </tbody></table></div>
+</div>

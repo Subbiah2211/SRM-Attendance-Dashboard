@@ -1,0 +1,21 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>All colleges</h1><p>Today's attendance in each college. Choose a college to work in it.</p></div>
+  <div class="actions"><a class="btn" href="/colleges/new"><%- ui.icon('plus', 18) %>Add a college</a></div></div>
+<div class="kpis">
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('building', 22) %></span><div><b><%= totals.colleges %></b><span>active colleges</span></div></div>
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('student', 22) %></span><div><b><%= totals.students %></b><span>students</span></div></div>
+  <div class="kpi t-excused"><span class="kpi-icon"><%- ui.icon('users', 22) %></span><div><b><%= totals.users %></b><span>users</span></div></div>
+  <div class="kpi t-idle"><span class="kpi-icon"><%- ui.icon('camera', 22) %></span><div><b><%= totals.cameras %></b><span>cameras</span></div></div>
+</div>
+<div class="card flush" data-live><div class="scroll"><table class="data">
+  <thead><tr><th>College</th><th>Today</th><th class="num">Students</th><th class="num">Users</th><th class="num">Cameras</th><th class="num">Uploads, 7 days</th><th></th></tr></thead>
+  <tbody>
+  <% colleges.forEach(function (c) { %>
+    <tr><td><span class="person"><%- ui.avatar(c.college_name, 'sm') %><span><b><%= c.college_name %></b><small><%= c.campus || '' %><%= c.is_active ? '' : ' (inactive)' %></small></span></span></td>
+      <td><%- ui.pct(c.percentage) %></td><td class="num"><%= c.students %></td><td class="num"><%= c.users %></td><td class="num"><%= c.cameras %></td><td class="num"><%= c.uploads_7d %></td>
+      <td><span class="rowlinks"><a href="/colleges/<%= c.college_id %>/permissions">Module permissions</a>
+        <form class="inline" method="post" action="/colleges/<%= c.college_id %>/enter"><%- include('../partials/csrf') %><button class="btn btn-quiet btn-small" type="submit">Work in this college</button></form></span></td></tr>
+  <% }) %>
+  <% if (!colleges.length) { %><tr><td colspan="7" class="empty">No colleges yet. Add the first one.</td></tr><% } %>
+  </tbody></table></div></div>
+<%- include('../partials/bottom') %>

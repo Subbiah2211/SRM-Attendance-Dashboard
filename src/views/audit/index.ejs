@@ -1,0 +1,14 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Audit log</h1><p>Sign-ins, uploads, corrections, timetable, user, permission and settings changes.</p></div></div>
+<form class="filters" method="get" action="/audit-logs">
+  <div class="wide"><label for="q">User or record</label><input id="q" type="search" name="q" value="<%= filters.q %>"></div>
+  <div class="wide"><label for="action">Action</label><select id="action" name="action"><option value="">All actions</option><% actions.forEach(function (a) { %><option value="<%= a %>"<%= filters.action === a ? ' selected' : '' %>><%= a.replace(/_/g, ' ') %></option><% }) %></select></div>
+  <div><label for="from">From</label><input id="from" type="date" name="from" value="<%= filters.from %>"></div><div><label for="to">To</label><input id="to" type="date" name="to" value="<%= filters.to %>"></div>
+  <div><button class="btn btn-quiet" type="submit">Apply</button></div></form>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>When</th><th>User</th><th>Action</th><th>Record</th><th>Before</th><th>After</th><th>IP</th></tr></thead><tbody>
+  <% rows.forEach(function (r) { %><tr><td><%= dates.fmtDateTime(r.action_time, my.timezone) %></td><td><%= r.username || '' %></td><td><%= r.action.replace(/_/g, ' ') %></td><td><%= r.table_name || '' %> <%= r.record_id || '' %></td>
+    <td><% if (r.old_values) { %><pre class="json"><%= JSON.stringify(r.old_values).slice(0, 400) %></pre><% } %></td><td><% if (r.new_values) { %><pre class="json"><%= JSON.stringify(r.new_values).slice(0, 400) %></pre><% } %></td><td><%= r.ip || '' %></td></tr><% }) %>
+  <% if (!rows.length) { %><tr><td colspan="7" class="empty">No audit entries match.</td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,20 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= title %></h1><p><%= section.label %>, <%= dayNames[day] || 'choose a day' %>.</p></div></div>
+<form class="card" method="post" action="/timetable/slots">
+  <%- include('../partials/csrf') %>
+  <h2>Class details</h2>
+  <input type="hidden" name="section_id" value="<%= section.section_id %>">
+  <% if (existing) { %><input type="hidden" name="timetable_id" value="<%= existing.timetable_id %>"><% } %>
+  <div class="field"><label for="day_of_week">Day</label><select id="day_of_week" name="day_of_week" required><% [1, 2, 3, 4, 5, 6, 7].forEach(function (d) { %><option value="<%= d %>"<%= d === day ? ' selected' : '' %>><%= dayNames[d] %></option><% }) %></select></div>
+  <div class="field"><label for="period_id">Period</label><select id="period_id" name="period_id" required><% options.periods.forEach(function (o) { %><option value="<%= o.value %>"<%= o.value === periodId ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <div class="field"><label for="subject_id">Subject</label><select id="subject_id" name="subject_id" required><option value="">Choose</option><% options.subjects.forEach(function (o) { %><option value="<%= o.value %>"<%= existing && existing.subject_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <div class="field"><label for="staff_id">Staff member</label><select id="staff_id" name="staff_id" required><option value="">Choose</option><% options.staff.forEach(function (o) { %><option value="<%= o.value %>"<%= existing && existing.staff_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <div class="field"><label for="classroom_id">Classroom</label><select id="classroom_id" name="classroom_id" required><option value="">Choose</option><% options.classrooms.forEach(function (o) { %><option value="<%= o.value %>"<%= existing && existing.classroom_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select>
+    <div class="hint">Attendance comes from the camera mapped to this classroom.</div></div>
+  <div class="field"><label for="effective_from">In effect from</label><input id="effective_from" type="date" name="effective_from" value="<%= defaultFrom %>" min="<%= dates.addDays(defaultFrom, -1) %>" required>
+    <div class="hint"><%= existing ? 'The current class keeps its past attendance and ends the day before.' : 'A period can hold more than one class of a section: lab batches or electives.' %></div></div>
+  <div class="form-actions"><button class="btn" type="submit">Save slot</button><a href="/timetable?section_id=<%= section.section_id %>">Cancel</a></div>
+</form>
+<% if (existing) { %><form class="card" method="post" action="/timetable/slots/<%= existing.timetable_id %>/close" data-confirm="Remove this class from the timetable from tomorrow?">
+  <%- include('../partials/csrf') %><h2>Remove this class</h2><p class="muted">Makes the period free from tomorrow. Past attendance is kept.</p><button class="btn btn-danger" type="submit">Remove from timetable</button></form><% } %>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,6 @@
+<%- include('partials/top') %>
+<% if (!user) { %><div class="signin"><% } %>
+<div class="head"><div><h1><%= status === 404 ? 'Not found' : status === 403 ? 'No access' : 'Something went wrong' %></h1><p><%= message %></p></div></div>
+<p><a href="<%= user ? '/dashboard' : '/login' %>"><%= user ? 'Go to the dashboard' : 'Go to sign in' %></a></p>
+<% if (!user) { %></div><% } %>
+<%- include('partials/bottom') %>

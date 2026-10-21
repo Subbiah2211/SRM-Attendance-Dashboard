@@ -1,0 +1,50 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Department attendance</h1><p><%= single ? dates.fmtDate(to) : dates.fmtDate(from) + ' to ' + dates.fmtDate(to) %><%= isToday ? '. Figures refresh every 30 seconds.' : '' %></p></div>
+  <div class="actions"><a class="btn btn-quiet" href="/attendance<%= qs({ range: null, by: null, camera_id: null, from: from, to: to }) %>"><%- ui.icon('list', 18) %>Open as a list</a></div></div>
+<%- include('_filters') %>
+<div <%- isToday ? 'data-live' : '' %>>
+<div class="kpis">
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('gauge', 22) %></span><div><b><%= totals.percentage === null ? 'No marks' : totals.percentage + '%' %></b><span>attendance</span></div><div class="meter"><i style="width:<%= totals.percentage || 0 %>%"></i></div></div>
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('check', 22) %></span><div><b><%= totals.present %></b><span>present marks, <%= totals.late %> late</span></div></div>
+  <div class="kpi t-absent"><span class="kpi-icon"><%- ui.icon('cross', 22) %></span><div><b><%= totals.absent %></b><span>absent marks</span></div></div>
+  <div class="kpi t-excused"><span class="kpi-icon"><%- ui.icon('shield', 22) %></span><div><b><%= totals.excused %></b><span>excused</span></div></div>
+  <div class="kpi <%= totals.needs_manual ? 't-absent alarm' : 't-idle' %>"><span class="kpi-icon"><%- ui.icon('alert', 22) %></span><div><b><%= totals.needs_manual %></b><span>need manual marking</span></div></div>
+</div>
+<%- include('_camera') %>
+<% if (single) { %><h2>Period register</h2>
+<% if (!grid.rows.length) { %>
+  <div class="card empty">No classes match on this date. It may be a holiday or a Sunday, or no timetable is loaded for the chosen filters.</div>
+<% } else { %>
+<div class="register-wrap"><table class="register">
+  <thead><tr><th>Class</th><% grid.periods.forEach(function (p) { %><th>Period <%= p.period_no %><small><%= dates.fmtTime(p.start_time) %> to <%= dates.fmtTime(p.end_time) %></small></th><% }) %></tr></thead>
+  <tbody>
+  <% grid.rows.forEach(function (r) { %><tr><th scope="row"><%= r.label %></th>
+    <% grid.periods.forEach(function (p) { const list = r.cells[p.period_no] || []; %>
+      <td><% if (!list.length) { %><span class="slot free">No class</span><% } %>
+        <% list.forEach(function (s) { %>
+        <a class="slot <%= s.status === 'needs_manual' ? 'manual' : (s.marked ? ui.band(s.percentage, threshold) : 'none') %>" href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>">
+          <b><%= s.short_name || s.subject_code %></b><small><%= s.staff_name %></small>
+          <span class="count"><% if (s.status === 'needs_manual') { %>Needs manual marking<% } else if (!s.marked) { %><span class="muted"><%= s.status === 'closed' ? 'No marks' : 'Not started yet' %></span><% } else { %><%= s.present %> of <%= s.marked %> present, <%= s.percentage %>%<% } %></span>
+          <% if (s.marked && s.status !== 'needs_manual') { %><span class="meter" aria-hidden="true"><i style="width:<%= s.percentage %>%"></i></span><% } %>
+          <% if (s.status === 'closed' && s.strength > s.marked) { %><small><%= s.strength - s.marked %> not marked</small><% } %>
+          <% if (s.status === 'scheduled' && s.marked) { %><small>in progress</small><% } %>
+        </a><% }) %></td>
+    <% }) %></tr><% }) %>
+  </tbody></table></div>
+<% } %><% } %>
+<%- include('_breakdown') %>
+<div class="cols wide-left">
+  <div class="card"><h2>Attendance, 30 days to <%= dates.fmtDate(to) %></h2><div class="chart"><canvas data-chart="<%= JSON.stringify(chart) %>" aria-label="Daily attendance percentage for the last 30 days"></canvas></div></div>
+  <div class="card"><h2><%= isToday ? 'Marks today' : 'Marks in this period' %></h2>
+    <% if (totals.marked) { %><div class="chart short"><canvas data-chart="<%= JSON.stringify(split) %>" aria-label="On time, late, absent and excused marks"></canvas></div>
+    <div class="legend"><span><i style="background:var(--present)"></i>On time <%= totals.present - totals.late %></span><span><i style="background:var(--late)"></i>Late <%= totals.late %></span><span><i style="background:var(--absent)"></i>Absent <%= totals.absent %></span><span><i style="background:var(--excused)"></i>Excused <%= totals.excused %></span></div>
+    <% } else { %><p class="empty">No marks for these filters.</p><% } %></div>
+</div>
+<div class="card flush"><div class="card-head"><h2>Lowest attendance, below <%= threshold %>%</h2><% if (defaulters.total > defaulters.rows.length) { %><a href="/reports/defaulters">All <%= defaulters.total %> defaulters</a><% } %></div><div class="scroll"><table class="data">
+  <thead><tr><th>Student</th><th>Class</th><th>Subject</th><th class="num">Attended</th><th>Attendance</th></tr></thead><tbody>
+  <% defaulters.rows.forEach(function (d) { %><tr><td><a class="person" href="/students/<%= d.student_id %>/attendance"><%- ui.avatar(d.full_name, 'sm') %><span><%= d.full_name %><small><%= d.register_no %></small></span></a></td>
+    <td><%= d.section_label %></td><td><%= d.subject_code %> <span class="muted"><%= d.subject_name %></span></td><td class="num"><%= d.attended_classes %> of <%= d.total_classes %></td><td><%- ui.pct(d.percentage, threshold) %></td></tr><% }) %>
+  <% if (!defaulters.rows.length) { %><tr><td colspan="5" class="empty">Nobody is below <%= threshold %>% for these filters.</td></tr><% } %>
+  </tbody></table></div></div>
+</div>
+<%- include('../partials/bottom') %>

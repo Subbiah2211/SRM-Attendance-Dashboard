@@ -1,0 +1,21 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Module permissions</h1>
+  <p><%= college.college_name %>. <%= editable ? 'Tick what each role may do in each module. Superadmin access is always full.' : 'Set by the superadmin. You can view it, not change it.' %></p></div></div>
+<form method="post" action="/colleges/<%= college.college_id %>/permissions">
+  <%- include('../partials/csrf') %>
+  <div class="card flush"><div class="scroll"><table class="data matrix">
+    <thead>
+      <tr><th rowspan="2">Module</th><% roles.forEach(function (r) { %><th class="grp" colspan="<%= actions.length %>"><%= ui.role(r) %></th><% }) %></tr>
+      <tr><% roles.forEach(function (r) { actions.forEach(function (a, i) { %><th<%- i === 0 ? ' class="grp"' : '' %>><%= a[0].toUpperCase() + a.slice(1) %></th><% }) }) %></tr>
+    </thead><tbody>
+    <% modules.forEach(function (m) { %><tr><td><b><%= m.name %></b></td>
+      <% roles.forEach(function (r) { actions.forEach(function (a, i) { const on = matrix[r][m.key][a]; %>
+        <td<%- i === 0 ? ' class="grp"' : '' %>><input type="checkbox" name="perm[<%= r %>][<%= m.key %>][<%= a %>]" data-cell="<%= r %>-<%= m.key %>" data-action="<%= a %>"
+          aria-label="<%= ui.role(r) %>: <%= a %> <%= m.name %>"<%= on ? ' checked' : '' %><%= editable ? '' : ' disabled' %>></td>
+      <% }) }) %></tr><% }) %>
+    </tbody></table></div></div>
+  <% if (editable) { %><div class="actions"><button class="btn" type="submit">Save permissions</button>
+    <button class="btn btn-danger" type="submit" name="reset" value="1" formnovalidate>Reset to the default matrix</button>
+    <span class="muted">Changes apply from each user's next request and are written to the audit log.</span></div><% } %>
+</form>
+<%- include('../partials/bottom') %>

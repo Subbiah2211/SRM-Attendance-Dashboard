@@ -1,0 +1,24 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= record.full_name %></h1>
+  <p><%= record.register_no %>. <%= session.subject_code %> <%= session.subject_name %>, <%= dates.fmtDate(record.attendance_date) %>, period <%= session.period_no %>.</p></div>
+  <div class="actions"><a href="/attendance/sessions/<%= record.timetable_id %>/<%= record.attendance_date %>">Back to the period</a></div></div>
+<div class="cols">
+  <div class="card"><h2>Record</h2><dl class="kv">
+    <dt>Status</dt><dd><%- ui.status(record.status) %></dd>
+    <dt>Source</dt><dd><%= record.attendance_source === 'ai' ? 'AI (camera)' : record.attendance_source === 'manual' ? 'Set by hand' + (record.marked_by_name ? ' by ' + record.marked_by_name : '') : record.attendance_source %></dd>
+    <dt>First seen</dt><dd><%= dates.fmtClock(record.entry_time, session.timezone) || 'Not seen' %></dd>
+    <dt>Last seen</dt><dd><%= dates.fmtClock(record.exit_time, session.timezone) || 'Not seen' %></dd>
+    <dt>Minutes seen</dt><dd><%= record.duration_minutes === null ? '' : record.duration_minutes %></dd>
+    <dt>Confidence</dt><dd><%= record.confidence === null ? '' : Number(record.confidence).toFixed(2) %></dd></dl></div>
+  <% if (canModify) { %><form class="card" method="post" action="/attendance/<%= record.attendance_id %>">
+    <%- include('../partials/csrf') %><h2>Correct the status</h2>
+    <div class="field"><label for="status">New status</label><select id="status" name="status" required><% statuses.filter(function (x) { return x !== record.status; }).forEach(function (st) { %><option value="<%= st %>"><%= st[0].toUpperCase() + st.slice(1) %></option><% }) %></select></div>
+    <div class="field"><label for="reason">Reason</label><textarea id="reason" name="reason" rows="2" minlength="5" maxlength="300" required></textarea><div class="hint">Kept with the correction, with your name and the time.</div></div>
+    <button class="btn" type="submit">Save correction</button></form><% } %>
+</div>
+<div class="card flush"><h2>History</h2><table class="data"><thead><tr><th>When</th><th>Change</th><th>By</th><th>Reason</th></tr></thead><tbody>
+  <% corrections.forEach(function (c) { %><tr><td><%= dates.fmtDateTime(c.corrected_at, session.timezone) %></td><td><%= c.old_status %> to <%= c.new_status %> (correction)</td><td><%= c.by_name %></td><td><%= c.reason %></td></tr><% }) %>
+  <% history.forEach(function (h) { %><tr><td><%= dates.fmtDateTime(h.modified_at, session.timezone) %></td><td><%= h.previous_status %> to <%= h.new_status %></td><td><%= h.by_name || 'Attendance engine' %></td><td></td></tr><% }) %>
+  <% if (!corrections.length && !history.length) { %><tr><td colspan="4" class="empty">The status has not changed since it was first marked.</td></tr><% } %>
+</tbody></table></div>
+<%- include('../partials/bottom') %>

@@ -1,0 +1,34 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Set up what is missing</h1>
+  <p><%= batch.file_name %> names these, and the college does not have them yet. Untick anything you would rather enter yourself.</p></div>
+  <div class="actions"><a class="btn btn-quiet" href="/imports/<%= batch.batch_id %>">Back to the preview</a></div></div>
+<% blockers.forEach(function (m) { %><div class="flash flash-error"><%- ui.icon('alert') %><span><%= m %></span></div><% }) %>
+<% warnings.forEach(function (m) { %><div class="flash flash-error"><%- ui.icon('clock') %><span><%= m %></span></div><% }) %>
+<% if (!count) { %><div class="card empty">Nothing is missing. Go back to the preview and commit.</div><% } else { %>
+<form method="post" action="/imports/<%= batch.batch_id %>/setup">
+  <%- include('../partials/csrf') %>
+  <% if (departments.length) { %><div class="card flush"><h2>Departments</h2><table class="data"><thead><tr><th>Code on the sheet</th><th>Name</th></tr></thead><tbody>
+    <% departments.forEach(function (d) { %><tr><td><b><%= d.code %></b></td><td><input type="text" name="department_name[<%= d.code %>]" value="<%= d.code %>" aria-label="Name of department <%= d.code %>" required></td></tr><% }) %></tbody></table></div><% } %>
+  <% if (programs.length) { %><div class="card flush"><h2>Programmes</h2><table class="data"><thead><tr><th>Code on the sheet</th><th>Name</th><th>Duration, years</th></tr></thead><tbody>
+    <% programs.forEach(function (g) { %><tr><td><b><%= g.code %></b></td><td><input type="text" name="program_name[<%= g.code %>]" value="<%= g.code === 'BE' ? 'Bachelor of Engineering' : g.code === 'BTECH' ? 'Bachelor of Technology' : g.code %>" aria-label="Name of programme <%= g.code %>" required></td>
+      <td><input type="number" name="program_years[<%= g.code %>]" value="4" min="1" max="8" style="width:90px" aria-label="Duration of <%= g.code %>"></td></tr><% }) %></tbody></table></div><% } %>
+  <% if (sections.length) { %><div class="card"><label class="check"><input type="checkbox" name="create_sections" checked> <b>Add <%= sections.length === 1 ? 'the class' : 'the classes' %></b></label>
+    <p class="muted" style="margin:8px 0 0"><%= sections.map(function (s) { return s.department_code + ' ' + s.program_code + ', semester ' + s.semester_no + ', section ' + s.section; }).join('; ') %>. Students are added to it with the Students upload.</p></div><% } %>
+  <% if (rooms.length) { %><div class="card"><label class="check"><input type="checkbox" name="create_rooms" checked> <b>Add <%= rooms.length %> <%= rooms.length === 1 ? 'hall' : 'halls' %></b></label>
+    <p class="muted" style="margin:8px 0 0"><%= rooms.map(function (r) { return r.room_number; }).join(', ') %>. Map a camera to each under Cameras > Camera mapping, or its classes will need manual marking.</p></div><% } %>
+  <% if (periods.length) { %><div class="card"><label class="check"><input type="checkbox" name="create_periods" checked> <b>Add <%= periods.length %> <%= periods.length === 1 ? 'hour' : 'hours' %> with the timings on the sheet</b></label>
+    <p class="muted" style="margin:8px 0 0"><%= periods.map(function (h) { return 'Period ' + h.period_no + (h.start ? ' ' + h.start + ' to ' + h.end : ' (no timing on the sheet: add it by hand)'); }).join('; ') %></p></div><% } %>
+  <% if (staff.length) { %><div class="card flush"><h2>Staff</h2>
+    <p class="muted" style="padding:0 20px">Each gets a sign-in with the staff code as username and first password, to be changed at first sign-in. Replace the suggested codes with your employee codes. If a person is already in the staff master under another name, untick them and type their staff code in the preview instead.</p>
+    <div class="scroll"><table class="data"><thead><tr><th>Add</th><th>Name on the sheet</th><th>Saved as</th><th>Department</th><th>Staff code</th><th>Designation</th></tr></thead><tbody>
+    <% staff.forEach(function (f, i) { %><tr>
+      <td><input type="checkbox" name="staff[<%= i %>][create]" checked aria-label="Add <%= f.name %>"></td>
+      <td><%= f.sheet_name %><% if (f.placeholder) { %><br><span class="muted">a post not yet filled: added as a placeholder</span><% } %></td>
+      <td><b><%= f.name %></b></td><td><%= f.department_code %></td>
+      <td><input type="text" name="staff[<%= i %>][code]" value="<%= f.suggested_code %>" style="width:130px" aria-label="Staff code for <%= f.name %>"></td>
+      <td><input type="text" name="staff[<%= i %>][designation]" value="<%= f.designation %>" style="min-width:150px" aria-label="Designation of <%= f.name %>"></td></tr><% }) %>
+    </tbody></table></div></div><% } %>
+  <div class="form-actions"><button class="btn" type="submit">Add these and check the sheet again</button><a href="/imports/<%= batch.batch_id %>">Cancel</a></div>
+</form>
+<% } %>
+<%- include('../partials/bottom') %>

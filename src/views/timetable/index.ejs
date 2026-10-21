@@ -1,0 +1,30 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Timetable</h1><p>Slots in effect on <%= dates.fmtDate(date) %>.</p></div>
+  <div class="actions"><% if (can('timetable', 'export') && slots.length) { %><a class="btn btn-quiet" href="/timetable/export<%= qs({ format: 'xlsx' }) %>"><%- ui.icon('download', 18) %>Excel</a><a class="btn btn-quiet" href="/timetable/export<%= qs({ format: 'pdf' }) %>"><%- ui.icon('file', 18) %>PDF</a><% } %>
+    <% if (can('master_data', 'edit') && my.collegeId) { %><a class="btn" href="/imports"><%- ui.icon('upload', 18) %>Upload a timetable</a><% } %></div></div>
+<form class="filters" method="get" action="/timetable" data-auto>
+  <div class="wide"><label for="section_id">Class</label><select id="section_id" name="section_id"><option value="">Choose a class</option>
+    <% sections.forEach(function (o) { %><option value="<%= o.value %>"<%= sectionId === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <% if (staffOptions.length) { %><div class="wide"><label for="staff_id">or staff member</label><select id="staff_id" name="staff_id"><option value="">Choose</option>
+    <% staffOptions.forEach(function (o) { %><option value="<%= o.value %>"<%= staffId === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <div><label for="date">In effect on</label><input id="date" type="date" name="date" value="<%= date %>"></div>
+  <div><button class="btn btn-quiet" type="submit">Show</button></div>
+</form>
+<% if (!periods.length) { %><div class="card empty">No periods are set up yet. Add them under Academic setup, then load a timetable.</div>
+<% } else if (!sectionId && !staffId) { %><div class="card empty">Choose a class<%= staffOptions.length ? ' or a staff member' : '' %> to see its week.</div>
+<% } else { %>
+<div class="register-wrap"><table class="register">
+  <thead><tr><th>Day</th><% periods.forEach(function (p) { %><th>Period <%= p.period_no %><small><%= dates.fmtTime(p.start_time) %> to <%= dates.fmtTime(p.end_time) %></small></th><% }) %></tr></thead><tbody>
+  <% days.forEach(function (d) { %><tr><th scope="row"><%= dayNames[d] %></th>
+    <% periods.forEach(function (p) { const list = cells[d + '|' + p.period_id] || []; %><td>
+      <% list.forEach(function (s) { %><div class="slot subject" style="--h:<%= ui.hue(s.subject_code) %>"><b><%= s.short_name || s.subject_code %></b><small><%= staffId ? s.section_label : s.staff_name %></small><small><%= s.room %></small>
+        <% if (canEdit) { %><a class="edit" href="/timetable/slots/new?section_id=<%= s.section_id %>&timetable_id=<%= s.timetable_id %>">Change</a><% } %></div><% }) %>
+      <% if (canEdit && list.length) { %><a class="edit add-more" href="/timetable/slots/new?section_id=<%= sectionId %>&day=<%= d %>&period_id=<%= p.period_id %>">Add another class</a><% } %>
+      <% if (!list.length) { %><div class="slot free"><% if (canEdit) { %><a href="/timetable/slots/new?section_id=<%= sectionId %>&day=<%= d %>&period_id=<%= p.period_id %>">Add</a><% } else { %>Free<% } %></div><% } %>
+    </td><% }) %></tr><% }) %>
+  </tbody></table></div>
+<% if (history.length) { %><div class="card flush"><h2>Recent changes</h2><table class="data"><tbody>
+  <% history.slice(0, 10).forEach(function (h) { %><tr><td><%= dates.fmtDateTime(h.modified_at, my.timezone) %></td><td>Slot <%= h.timetable_id %> <%= h.change_type || 'changed' %></td><td><%= h.modified_by_name || 'System' %></td></tr><% }) %>
+  </tbody></table></div><% } %>
+<% } %>
+<%- include('../partials/bottom') %>

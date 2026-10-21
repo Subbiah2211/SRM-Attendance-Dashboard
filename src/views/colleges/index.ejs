@@ -1,0 +1,15 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Colleges</h1><p>Each college has its own users, master data and module permissions.</p></div>
+  <div class="actions"><a class="btn" href="/colleges/new"><%- ui.icon('plus', 18) %>Add a college</a></div></div>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>College</th><th>Login code</th><th class="num">Departments</th><th class="num">Students</th><th class="num">Users</th><th>Status</th><th></th></tr></thead><tbody>
+  <% colleges.forEach(function (c) { %><tr>
+    <td><span class="person"><%- ui.avatar(c.college_name) %><span><b><%= c.college_name %></b><small><%= c.campus || '' %></small></span></span></td>
+    <td><a href="/c/<%= c.college_code %>/login">/c/<%= c.college_code %>/login</a></td>
+    <td class="num"><%= c.departments %></td><td class="num"><%= c.students %></td><td class="num"><%= c.users %></td>
+    <td><span class="chip <%= c.is_active ? 'chip-present' : 'chip-none' %>"><%= c.is_active ? 'Active' : 'Inactive' %></span></td>
+    <td><span class="rowlinks"><form class="inline" method="post" action="/colleges/<%= c.college_id %>/enter"><%- include('../partials/csrf') %><button class="btn btn-quiet btn-small" type="submit">Work in this college</button></form>
+      <a href="/colleges/<%= c.college_id %>/permissions">Module permissions</a> <a href="/colleges/<%= c.college_id %>/edit">Edit</a></span></td></tr><% }) %>
+  <% if (!colleges.length) { %><tr><td colspan="7" class="empty">No colleges yet. Add the first one.</td></tr><% } %>
+  </tbody></table></div></div>
+<%- include('../partials/bottom') %>

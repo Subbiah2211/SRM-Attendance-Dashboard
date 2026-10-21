@@ -1,0 +1,36 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= my.collegeName %></h1><p><%= single ? dates.fmtDate(to) : dates.fmtDate(from) + ' to ' + dates.fmtDate(to) %><%= isToday ? '. Figures refresh every 30 seconds.' : '' %></p></div></div>
+<%- include('_filters') %>
+<div <%- isToday ? 'data-live' : '' %>>
+<div class="kpis six">
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('gauge', 22) %></span><div><b><%= totals.percentage === null ? 'No marks' : totals.percentage + '%' %></b><span>attendance</span></div>
+    <div class="meter"><i style="width:<%= totals.percentage || 0 %>%"></i></div></div>
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('check', 22) %></span><div><b><%= totals.present %></b><span>present marks, <%= totals.late %> late</span></div></div>
+  <div class="kpi t-absent"><span class="kpi-icon"><%- ui.icon('cross', 22) %></span><div><b><%= totals.absent %></b><span>absent marks</span></div></div>
+  <div class="kpi t-idle"><span class="kpi-icon"><%- ui.icon('timetable', 22) %></span><div><b><%= totals.closed %> of <%= totals.sessions %></b><span>periods closed</span></div></div>
+  <div class="kpi <%= manual.length ? 't-absent alarm' : 't-idle' %>"><span class="kpi-icon"><%- ui.icon('alert', 22) %></span><div><b><%= manual.length %></b><span>need manual marking</span></div></div>
+  <div class="kpi <%= cameras.offline ? 't-absent alarm' : 't-present' %>"><span class="kpi-icon"><%- ui.icon('camera', 22) %></span><div><b><%= cameras.online %> of <%= cameras.total %></b><span>cameras online</span></div></div>
+</div>
+<%- include('_camera') %>
+<div class="cols wide-left">
+  <div class="card"><h2>Attendance, 30 days to <%= dates.fmtDate(to) %></h2><div class="chart"><canvas data-chart="<%= JSON.stringify(chart) %>" aria-label="Daily attendance percentage for 30 days"></canvas></div></div>
+  <div class="card"><h2><%= isToday ? 'Marks today' : 'Marks in this period' %></h2>
+    <% if (totals.marked) { %><div class="chart short"><canvas data-chart="<%= JSON.stringify(split) %>" aria-label="On time, late, absent and excused marks"></canvas></div>
+    <div class="legend"><span><i style="background:var(--present)"></i>On time <%= totals.present - totals.late %></span><span><i style="background:var(--late)"></i>Late <%= totals.late %></span><span><i style="background:var(--absent)"></i>Absent <%= totals.absent %></span><span><i style="background:var(--excused)"></i>Excused <%= totals.excused %></span></div>
+    <% } else { %><p class="empty">No marks for these filters: a holiday, a Sunday, or classes have not started.</p><% } %></div>
+</div>
+<%- include('_breakdown') %>
+<div class="cols">
+  <div class="card flush"><div class="card-head"><h2>Periods that need manual marking</h2><% if (manual.length) { %><a href="/attendance?status=needs_manual&from=<%= dates.addDays(today, -7) %>&to=<%= today %>">See all</a><% } %></div><table class="data"><tbody>
+    <% manual.forEach(function (s) { %><tr><td><b><%= s.section_label %></b><br><span class="muted"><%= dates.fmtDate(s.session_date) %>, period <%= s.period_no %>. <%= s.subject_code %>, <%= s.staff_name %></span></td>
+      <td class="num"><a class="btn btn-quiet btn-small" href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>">Mark</a></td></tr><% }) %>
+    <% if (!manual.length) { %><tr><td class="empty">None in the last three days.</td></tr><% } %>
+  </tbody></table></div>
+  <div class="card"><h2>Operations</h2>
+    <dl class="kv"><dt>Unknown faces to review</dt><dd><% if (can('cameras')) { %><a href="/unknown-detections"><%= unknownCount %></a><% } else { %><%= unknownCount %><% } %></dd>
+      <dt>Cameras offline</dt><dd><% if (can('cameras')) { %><a href="/cameras/health"><%= cameras.offline %></a><% } else { %><%= cameras.offline %><% } %></dd></dl>
+    <% if (imports.length) { %><h3 style="margin-top:16px">Recent uploads</h3><div class="note-list"><% imports.forEach(function (b) { %><div><a href="/imports/<%= b.batch_id %>"><%= b.import_type[0].toUpperCase() + b.import_type.slice(1) %></a> <span class="muted"><%= b.file_name %>, <%= b.status === 'validated' ? 'waiting for commit' : b.status %></span></div><% }) %></div><% } %>
+  </div>
+</div>
+</div>
+<%- include('../partials/bottom') %>

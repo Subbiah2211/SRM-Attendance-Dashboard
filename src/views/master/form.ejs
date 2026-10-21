@@ -1,0 +1,26 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= title %></h1></div></div>
+<% if (errors.length) { %><div class="flash flash-error" role="alert"><% errors.forEach(function (e) { %><div><%= e.message %></div><% }) %></div><% } %>
+<form class="card" method="post" action="/master/<%= entityKey %><%= id ? '/' + encodeURIComponent(id) : '' %>">
+  <%- include('../partials/csrf') %>
+  <h2><%= entity.one[0].toUpperCase() + entity.one.slice(1) %> details</h2>
+  <% fields.forEach(function (f) { const v = row[f.name]; const val = v === null || v === undefined ? '' : (f.type === 'time' ? String(v).slice(0, 5) : v); %>
+    <div class="field">
+      <% if (f.type === 'bool') { %>
+        <label class="check"><input type="checkbox" name="<%= f.name %>"<%= v === true || v === 'on' || v === 'true' ? ' checked' : '' %>> <%= f.label %></label>
+      <% } else { %>
+        <label for="<%= f.name %>"><%= f.label %><%= f.required ? '' : ' (optional)' %></label>
+        <% if (f.type === 'select') { %>
+          <select id="<%= f.name %>" name="<%= f.name %>"<%= f.required ? ' required' : '' %>><option value="">Choose</option>
+            <% (options[f.name] || []).forEach(function (o) { %><option value="<%= o.value %>"<%= String(o.value) === String(val) ? ' selected' : '' %>><%= o.label %></option><% }) %></select>
+        <% } else { %>
+          <input id="<%= f.name %>" name="<%= f.name %>" type="<%= f.type === 'int' || f.type === 'number' ? 'number' : f.type %>" value="<%= val %>"
+            <%= f.type === 'number' ? 'step=any' : '' %><%= f.required ? ' required' : '' %><%= f.max && f.type === 'text' ? ' maxlength=' + f.max : '' %>>
+        <% } %>
+      <% } %>
+      <% if (f.hint) { %><div class="hint"><%= f.hint %></div><% } %>
+    </div>
+  <% }) %>
+  <div class="form-actions"><button class="btn" type="submit">Save <%= entity.one %></button><a href="/master/<%= entityKey %>">Cancel</a></div>
+</form>
+<%- include('../partials/bottom') %>

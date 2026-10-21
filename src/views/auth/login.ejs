@@ -1,0 +1,23 @@
+<%- include('../partials/top') %>
+<div class="signin">
+  <h1>Sign in</h1>
+  <p class="muted">Choose your college, then use your college account.</p>
+  <% if (flash) { %><div class="flash flash-<%= flash.kind === 'error' ? 'error' : 'ok' %>" role="alert"><%= flash.message %></div><% } %>
+  <form method="post" action="/login">
+    <div class="field">
+      <label for="college_code">College</label>
+      <span class="glass-input"><%- ui.icon('building', 18) %><select id="college_code" name="college_code">
+        <% colleges.forEach(function (c) { %>
+          <option value="<%= c.college_code %>"<%= selected === c.college_code ? ' selected' : '' %>><%= c.college_name %><%= c.campus ? ', ' + c.campus : '' %></option>
+        <% }) %>
+        <option value=""<%= selected === '' && colleges.length ? '' : (selected === '' ? ' selected' : '') %>>Group administration (superadmin)</option>
+      </select></span>
+    </div>
+    <div class="field"><label for="username">Username</label><span class="glass-input"><%- ui.icon('user', 18) %><input id="username" name="username" type="text" value="<%= username %>" autocomplete="username" placeholder="Staff code or register number" required autofocus></span></div>
+    <div class="field"><label for="password">Password</label><span class="glass-input"><%- ui.icon('lock', 18) %><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required></span></div>
+    <button class="btn btn-glow" type="submit">Sign in</button>
+    <p class="fs-note">After you sign in the dashboard opens in full screen.</p>
+  </form>
+  <p style="margin:16px 0 0"><a href="/password/forgot">Forgot your password?</a></p>
+</div>
+<%- include('../partials/bottom') %>

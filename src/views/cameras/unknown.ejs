@@ -1,0 +1,12 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>Unknown faces</h1><p>Detections the recognition pipeline could not match to a student.</p></div></div>
+<nav class="tabs"><a href="/unknown-detections"<%- reviewed ? '' : ' aria-current="page"' %>>To review</a><a href="/unknown-detections?reviewed=1"<%- reviewed ? ' aria-current="page"' : '' %>>Reviewed</a></nav>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>Seen</th><th>Camera</th><th>Stage</th><th>Reason</th><th class="num">Best similarity</th><th><%= reviewed ? 'Remarks' : 'Review' %></th></tr></thead><tbody>
+  <% rows.forEach(function (r) { %><tr><td><%= dates.fmtDateTime(r.frame_captured_at, my.timezone) %></td><td><%= r.camera_id %><br><span class="muted"><%= r.location_label %></span></td><td><%= r.stage %></td><td><%= r.reason %></td>
+    <td class="num"><%= r.best_similarity === null ? '' : Number(r.best_similarity).toFixed(2) %></td>
+    <td><% if (reviewed) { %><%= r.remarks || '' %><% } else if (can('cameras', 'edit')) { %><form class="inline" method="post" action="/unknown-detections/<%= r.detection_id %>/review"><%- include('../partials/csrf') %>
+      <input type="text" name="remarks" placeholder="Remarks" style="width:180px" aria-label="Remarks"> <button class="btn btn-quiet btn-small" type="submit">Mark reviewed</button></form><% } %></td></tr><% }) %>
+  <% if (!rows.length) { %><tr><td colspan="6" class="empty">Nothing <%= reviewed ? 'reviewed yet' : 'waiting for review' %>.</td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>

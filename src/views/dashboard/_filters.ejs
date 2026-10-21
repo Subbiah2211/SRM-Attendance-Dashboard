@@ -1,0 +1,22 @@
+<%# The filter window shared by the admin, HOD and staff dashboards. %>
+<% const chip = function (key, label) { return '<a class="seg' + (preset === key ? ' on' : '') + '" href="/dashboard' + qs({ range: key, from: null, to: null, date: null }) + '">' + label + '</a>'; }; %>
+<form class="filters panel" method="get" action="/dashboard">
+  <div class="panel-head"><%- ui.icon('filter', 18) %><b>Filter the dashboard</b>
+    <span class="segs" role="group" aria-label="Period"><%- chip('today', 'Today') %><%- chip('yesterday', 'Yesterday') %><%- chip('week', 'Last 7 days') %><%- chip('month', 'Last 30 days') %></span></div>
+  <input type="hidden" name="by" value="<%= by %>">
+  <div><label for="from">From</label><input id="from" type="date" name="from" value="<%= from %>" max="<%= today %>"></div>
+  <div><label for="to">To</label><input id="to" type="date" name="to" value="<%= to %>" max="<%= today %>"></div>
+  <% if (options.departments.length) { %><div><label for="department_id">Department</label><select id="department_id" name="department_id"><option value="">All departments</option>
+    <% options.departments.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.department_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <div class="wide"><label for="section_id">Class</label><select id="section_id" name="section_id"><option value="">All classes</option>
+    <% options.sections.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.section_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <div class="wide"><label for="subject_id">Subject</label><select id="subject_id" name="subject_id"><option value="">All subjects</option>
+    <% options.subjects.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.subject_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <% if (options.staff.length) { %><div class="wide"><label for="staff_id">Staff name</label><select id="staff_id" name="staff_id"><option value="">All staff</option>
+    <% options.staff.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.staff_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <div><label for="period_id">Period</label><select id="period_id" name="period_id"><option value="">All periods</option>
+    <% options.periods.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.period_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div>
+  <% if (can('camera_view')) { %><div class="wide"><label for="camera_id">AI camera</label><select id="camera_id" name="camera_id"><option value="">All cameras</option>
+    <% options.cameras.forEach(function (o) { %><option value="<%= o.camera_id %>"<%= camera && camera.camera_id === o.camera_id ? ' selected' : '' %>><%= o.room || o.location_label %> (<%= o.camera_id %>)</option><% }) %></select></div><% } %>
+  <div><button class="btn" type="submit">Apply</button><a href="/dashboard">Clear</a></div>
+</form>

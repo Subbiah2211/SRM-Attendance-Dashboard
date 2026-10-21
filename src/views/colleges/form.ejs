@@ -1,0 +1,14 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= title %></h1><% if (!college.college_id) { %><p>A new college starts with the default module permissions. Add its admin under Users after choosing to work in it.</p><% } %></div></div>
+<form class="card" method="post" action="<%= college.college_id ? '/colleges/' + college.college_id : '/colleges' %>">
+  <%- include('../partials/csrf') %>
+  <h2>College details</h2>
+  <div class="field"><label for="college_name">College name</label><input id="college_name" name="college_name" type="text" value="<%= college.college_name || '' %>" required></div>
+  <div class="field"><label for="campus">Campus</label><input id="campus" name="campus" type="text" value="<%= college.campus || '' %>"><div class="hint">For example Kattankulathur or Ramapuram.</div></div>
+  <div class="field"><label for="college_code">Login code</label><input id="college_code" name="college_code" type="text" value="<%= college.college_code || '' %>" pattern="[a-z0-9\-]{2,40}" required>
+    <div class="hint">Lower-case letters, digits and dashes. It is used in the sign-in link, for example /c/srmist-rmp/login.</div></div>
+  <div class="field"><label for="timezone">Time zone</label><input id="timezone" name="timezone" type="text" value="<%= college.timezone || 'Asia/Kolkata' %>" required></div>
+  <div class="field"><label class="check"><input type="checkbox" name="is_active"<%= college.is_active ? ' checked' : '' %>> Active (users of this college can sign in)</label></div>
+  <div class="form-actions"><button class="btn" type="submit">Save college</button><a href="/colleges">Cancel</a></div>
+</form>
+<%- include('../partials/bottom') %>

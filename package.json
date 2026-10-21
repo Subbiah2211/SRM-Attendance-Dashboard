@@ -1,0 +1,43 @@
+{
+  "name": "srm-attendance-dashboard",
+  "version": "1.0.0",
+  "description": "College-wise dashboard for AI video based student attendance (Node.js MVC + PostgreSQL)",
+  "private": true,
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "worker": "node src/worker.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node scripts/migrate.js --with-base",
+    "migrate": "node scripts/migrate.js",
+    "seed:superadmin": "node scripts/create-superadmin.js",
+    "seed:demo": "node scripts/seed-demo.js",
+    "simulate": "node scripts/simulate-events.js",
+    "test": "node --test --test-concurrency=1 tests/unit.test.js tests/integration.test.js"
+  },
+  "dependencies": {
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "argon2": "^0.45.1",
+    "chart.js": "^4.5.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^18.0.5",
+    "ejs": "^6.0.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "hls.js": "^1.7.3",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.0.14",
+    "pdfjs-dist": "^6.3.289",
+    "pdfkit": "^0.20.2",
+    "pg": "^8.23.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
+  }
+}

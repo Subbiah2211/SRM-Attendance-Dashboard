@@ -1,0 +1,12 @@
+<%- include('../partials/top') %>
+<div class="signin">
+  <h1>Set a new password</h1>
+  <p class="muted">At least 8 characters, with a letter and a number.</p>
+  <% if (flash) { %><div class="flash flash-error" role="alert"><%= flash.message %></div><% } %>
+  <form method="post" action="/password/reset/<%= token %>">
+    <div class="field"><label for="np">New password</label><input id="np" name="new_password" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="field"><label for="np2">New password again</label><input id="np2" name="confirm_password" type="password" autocomplete="new-password" minlength="8" required></div>
+    <button class="btn btn-glow" type="submit">Set password</button>
+  </form>
+</div>
+<%- include('../partials/bottom') %>

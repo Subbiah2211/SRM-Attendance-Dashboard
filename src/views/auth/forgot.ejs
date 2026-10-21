@@ -1,0 +1,16 @@
+<%- include('../partials/top') %>
+<div class="signin">
+  <h1>Reset password</h1>
+  <p class="muted">We email a reset link to the address on your account. No email on the account? Ask your college admin to reset it.</p>
+  <form method="post" action="/password/forgot">
+    <div class="field"><label for="college_code">College</label>
+      <select id="college_code" name="college_code">
+        <% colleges.forEach(function (c) { %><option value="<%= c.college_code %>"><%= c.college_name %><%= c.campus ? ', ' + c.campus : '' %></option><% }) %>
+        <option value="">Group administration (superadmin)</option>
+      </select></div>
+    <div class="field"><label for="username">Username</label><input id="username" name="username" type="text" required></div>
+    <button class="btn btn-glow" type="submit">Send reset link</button>
+  </form>
+  <p style="margin:16px 0 0"><a href="/login">Back to sign in</a></p>
+</div>
+<%- include('../partials/bottom') %>

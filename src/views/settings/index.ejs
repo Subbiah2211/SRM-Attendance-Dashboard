@@ -1,0 +1,13 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1><%= title %></h1><p><%= my.collegeId ? 'These override the group defaults for ' + my.collegeName + '.' : 'Used by every college that has not set its own value.' %></p></div></div>
+<form class="card" method="post" action="/settings">
+  <%- include('../partials/csrf') %>
+  <h2>Attendance rules, sign-in and upload limits</h2>
+  <% Object.keys(keys).forEach(function (k) { const def = keys[k]; %><div class="field">
+    <% if (def.type === 'bool') { %><label class="check"><input type="checkbox" name="<%= k %>"<%= values[k] ? ' checked' : '' %><%= canEdit ? '' : ' disabled' %>> <%= def.label %></label>
+      <% if (def.hint) { %><div class="hint"><%= def.hint %></div><% } %>
+    <% } else { %><label for="<%= k %>"><%= def.label %></label><input id="<%= k %>" name="<%= k %>" type="number" step="<%= def.type === 'float' ? 'any' : '1' %>" min="<%= def.min %>" max="<%= def.max %>" value="<%= values[k] %>"<%= canEdit ? '' : ' disabled' %>><% } %>
+  </div><% }) %>
+  <% if (canEdit) { %><button class="btn" type="submit">Save settings</button><% } %>
+</form>
+<%- include('../partials/bottom') %>

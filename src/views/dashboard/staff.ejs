@@ -1,0 +1,24 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>My classes</h1><p><%= single ? dates.fmtDate(to) : dates.fmtDate(from) + ' to ' + dates.fmtDate(to) %><%= isToday ? '. Figures refresh every 30 seconds.' : '' %></p></div></div>
+<%- include('_filters') %>
+<% if (manual.length) { %><div class="flash flash-error"><%- ui.icon('alert') %><span><b><%= manual.length %> <%= manual.length === 1 ? 'period needs' : 'periods need' %> manual marking.</b>
+  <% manual.forEach(function (s) { %> <a href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>"><%= s.session_date %> period <%= s.period_no %>, <%= s.section_label %></a>;<% }) %></span></div><% } %>
+<div <%- isToday ? 'data-live' : '' %>>
+<div class="kpis">
+  <div class="kpi t-idle"><span class="kpi-icon"><%- ui.icon('timetable', 22) %></span><div><b><%= totals.classes %></b><span>classes in this period</span></div></div>
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('gauge', 22) %></span><div><b><%= totals.percentage === null ? 'No marks' : totals.percentage + '%' %></b><span>attendance in my classes</span></div></div>
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('check', 22) %></span><div><b><%= totals.present %></b><span>present marks</span></div></div>
+  <div class="kpi t-absent"><span class="kpi-icon"><%- ui.icon('cross', 22) %></span><div><b><%= totals.absent %></b><span>absent marks</span></div></div>
+</div>
+<%- include('_camera') %>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>Period</th><th>Class</th><th>Subject</th><th>Room</th><th class="num">Present</th><th class="num">Absent</th><th class="num">Not marked</th><th>Attendance</th><th>Status</th><th></th></tr></thead><tbody>
+  <% sessions.forEach(function (s) { %><tr><td class="nw"><b>Period <%= s.period_no %></b><br><span class="muted"><%= single ? '' : dates.fmtDate(s.session_date) + ', ' %><%= dates.fmtTime(s.start_time) %> to <%= dates.fmtTime(s.end_time) %></span></td>
+    <td><%= s.section_label %></td><td><b><%= s.subject_code %></b><br><span class="muted"><%= s.subject_name %></span></td><td><%= s.room %></td>
+    <td class="num"><%= s.present %></td><td class="num"><%= s.absent %></td><td class="num"><%= s.strength - s.marked %></td><td><%- ui.pct(s.percentage, threshold) %></td><td><%- ui.session(s.status) %></td>
+    <td class="num"><a class="btn btn-quiet btn-small" href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>">Students</a></td></tr><% }) %>
+  <% if (!sessions.length) { %><tr><td colspan="10" class="empty">You have no classes for these filters.</td></tr><% } %>
+  </tbody></table></div></div>
+<%- include('_breakdown') %>
+</div>
+<%- include('../partials/bottom') %>

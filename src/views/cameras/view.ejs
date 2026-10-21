@@ -1,0 +1,41 @@
+<%- include('../partials/top') %>
+<div class="head"><div><h1>AI camera view</h1><p>Choose a camera to see the class in its room and who it has recognised today.</p></div>
+  <% if (can('cameras')) { %><div class="actions"><a class="btn btn-quiet" href="/cameras/health"><%- ui.icon('gauge', 18) %>Camera health</a></div><% } %></div>
+<% if (!cameras.length) { %><div class="card empty">No cameras to show. <%= user.role === 'staff' ? 'You see the cameras of the rooms you teach in, once your timetable is loaded.' : user.role === 'hod' ? 'You see the cameras of the rooms your department uses, once its timetable is loaded.' : 'Map cameras to classrooms under Cameras > Camera mapping.' %></div><% } else { %>
+<div class="cam-picker" role="list">
+  <% cameras.forEach(function (c) { %><a role="listitem" class="cam<%= camera && camera.camera_id === c.camera_id ? ' on' : '' %>" href="/cameras/view?camera_id=<%= encodeURIComponent(c.camera_id) %>">
+    <span class="cam-ico"><%- ui.icon('camera', 22) %></span><span><b><%= c.room || c.location_label %></b><small><%= c.camera_id %></small></span>
+    <span class="chip chip-<%= c.status === 'online' ? 'present' : c.status === 'offline' ? 'absent' : 'none' %>"><%= c.status ? c.status[0].toUpperCase() + c.status.slice(1) : 'No report' %></span></a><% }) %>
+</div>
+<% if (camera) { %><div data-live>
+<div class="kpis">
+  <div class="kpi t-present"><span class="kpi-icon"><%- ui.icon('student', 22) %></span><div><b><%= activity.counts.students %></b><span>students recognised today</span></div></div>
+  <div class="kpi"><span class="kpi-icon"><%- ui.icon('eye', 22) %></span><div><b><%= activity.counts.events %></b><span>detections today</span></div></div>
+  <div class="kpi <%= activity.counts.unknown ? 't-late' : 't-idle' %>"><span class="kpi-icon"><%- ui.icon('search', 22) %></span><div><b><%= activity.counts.unknown %></b><span>unknown faces today</span></div></div>
+  <div class="kpi t-idle"><span class="kpi-icon"><%- ui.icon('clock', 22) %></span><div><b><%= activity.counts.last_at ? dates.fmtClock(activity.counts.last_at, my.timezone) : 'None' %></b><span>last recognition</span></div></div>
+</div>
+<div class="cols wide-left">
+  <div class="card flush"><div class="card-head"><h2>Live view</h2><span class="muted" style="padding-bottom:.7rem"><%= camera.location_label %></span></div>
+    <% if (viewerKind === 'hls' || viewerKind === 'video') { %><video class="cam-stage" controls autoplay muted playsinline <%- viewerKind === 'hls' ? 'data-hls="' + ui.esc(camera.viewer_url) + '"' : 'src="' + ui.esc(camera.viewer_url) + '"' %>></video>
+    <% } else if (viewerKind === 'image') { %><img class="cam-stage" src="<%= camera.viewer_url %>" alt="Live picture from <%= camera.location_label %>">
+    <% } else if (viewerKind === 'page') { %><iframe class="cam-stage" src="<%= camera.viewer_url %>" title="Live view of <%= camera.location_label %>" allow="autoplay; fullscreen"></iframe>
+    <% } else { %><div class="cam-stage cam-off"><%- ui.icon('camera', 44) %><p><b>No live view address is set for this camera.</b><br>Browsers cannot play a camera's RTSP stream directly. Add an HLS, MJPEG or gateway page address under Cameras &gt; Camera mapping to show video here. Recognitions below work without it.</p></div><% } %>
+  </div>
+  <div class="card flush"><h2>In the room now</h2><table class="data"><tbody>
+    <% activity.now.forEach(function (n) { %><tr><td><b><%= n.short_name || n.subject_code %></b> <span class="muted"><%= n.subject_name %></span><br><%= n.section_label %>, <%= n.staff_name %><br><span class="muted">Period <%= n.period_no %>, <%= dates.fmtTime(n.start_time) %> to <%= dates.fmtTime(n.end_time) %></span></td>
+      <td class="num"><a class="btn btn-quiet btn-small" href="/attendance/sessions/<%= n.timetable_id %>/<%= n.session_date %>">Students</a></td></tr><% }) %>
+    <% if (!activity.now.length) { %><tr><td class="empty">No class is scheduled in this room right now.</td></tr><% } %>
+  </tbody></table></div>
+</div>
+<div class="card flush"><h2>Recognised today, latest first</h2><div class="scroll"><table class="data">
+  <thead><tr><th>Time</th><th>Student</th><th class="num">Confidence</th><th>Result</th></tr></thead><tbody>
+  <% const why = { no_class_scheduled: 'No class in this room then', student_not_in_section: 'Not in the class held here', student_not_enrolled: 'Not on the roll of this elective', low_confidence: 'Confidence too low', non_working_day: 'Not a working day', student_not_active: 'Student not active', manual_record: 'Already marked by hand', camera_unmapped: 'Camera not mapped' }; %>
+  <% activity.recent.forEach(function (r) { %><tr><td class="nw"><%= dates.fmtClock(r.frame_captured_at, my.timezone) %></td>
+    <td><span class="person"><%- ui.avatar(r.full_name, 'sm') %><span><b><%= r.full_name %></b><small><%= r.register_no %></small></span></span></td>
+    <td class="num"><%= Number(r.confidence).toFixed(2) %></td>
+    <td><% if (r.status) { %><%- ui.status(r.status) %><% } else if (r.ignored_reason) { %><span class="muted"><%= why[r.ignored_reason] || r.ignored_reason %></span><% } else { %><span class="muted">Waiting for the attendance engine</span><% } %></td></tr><% }) %>
+  <% if (!activity.recent.length) { %><tr><td colspan="4" class="empty">This camera has recognised nobody today.</td></tr><% } %>
+  </tbody></table></div></div>
+</div><% } else { %><div class="card empty">Choose a camera above.</div><% } %>
+<% } %>
+<%- include('../partials/bottom') %>

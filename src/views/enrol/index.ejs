@@ -1,0 +1,48 @@
+<%- include('../partials/top') %>
+<% if (student.face_registered) { %>
+<div class="head"><div><h1>Face enrolment</h1><p>Your face is enrolled. Classroom cameras can mark your attendance.</p></div></div>
+<div class="card"><h2>Your enrolment photos</h2>
+  <div class="shots"><% photos.forEach(function (f) { %><div class="shot"><div class="shot-frame"><img src="/students/me/photos/<%= f %>" alt="Enrolment photo, <%= f.replace('.jpg', '') %>"></div><b><%= f.replace('.jpg', '')[0].toUpperCase() + f.replace('.jpg', '').slice(1) %></b></div><% }) %></div>
+  <% if (!photos.length) { %><p class="muted">Your face was enrolled by the college office, so no photos are kept here.</p><% } %>
+  <dl class="kv" style="margin-top:14px"><dt>Register number</dt><dd><%= student.register_no %></dd>
+    <dt>Enrolled on</dt><dd><%= dates.fmtDateTime(student.enrolled_at, my.timezone) %></dd>
+    <dt>Photos stored as face data</dt><dd><%= student.embeddings %></dd></dl>
+  <p class="muted" style="margin:14px 0 0">To enrol again with new photos, ask your class advisor or HOD to reset your enrolment.</p>
+</div>
+<% } else { %>
+<div class="head"><div><h1>Enrol your face</h1><p><%= required ? 'Before you can use the dashboard, add' : 'Add' %> at least <%= min %> photos of your face. Classroom cameras use them to mark your attendance.</p></div></div>
+<div class="cols wide-left">
+<form class="card" method="post" action="/enroll" enctype="multipart/form-data" data-enroll>
+  <%- include('../partials/csrf') %>
+  <h2><%= student.full_name %>, <%= student.register_no %></h2>
+  <div class="shots">
+    <% [['Facing the camera', true], ['Turned slightly to your left', true], ['Turned slightly to your right', true], ['One more (optional)', false]].slice(0, Math.max(min + 1, 4)).forEach(function (slot, i) { const need = i < min; %>
+    <div class="shot" data-shot>
+      <div class="shot-frame"><img alt="Photo <%= i + 1 %> preview" hidden><span class="shot-empty"><%- ui.icon('user', 34) %><span><%= i + 1 %></span></span></div>
+      <b><%= slot[0] %></b>
+      <input type="file" name="photos" accept="image/jpeg,image/*" capture="user"<%= need ? ' required' : '' %> aria-label="Photo <%= i + 1 %>: <%= slot[0] %>">
+      <button class="btn btn-quiet btn-small" type="button" data-cam hidden><%- ui.icon('camera', 16) %>Use this device's camera</button>
+    </div><% }) %>
+  </div>
+  <div class="field full"><label class="check"><input type="checkbox" name="consent" required> I agree that the college stores these photos and the face data made from them, and uses them to mark my attendance.</label>
+    <div class="hint">If you do not agree, do not enrol: tell your class advisor, and your attendance will be marked by hand.</div></div>
+  <div class="form-actions"><button class="btn" type="submit"><%- ui.icon('check', 18) %>Enrol my face</button><span class="muted">Checking the photos can take up to a minute.</span></div>
+</form>
+<div class="card"><h2>For photos that work</h2>
+  <ol class="steps">
+    <li>Be alone in the picture, with your whole face visible.</li>
+    <li>Face a window or a light. No strong light behind you.</li>
+    <li>Take off sunglasses, masks and caps. Normal glasses are fine.</li>
+    <li>Hold the phone at eye level, an arm's length away.</li>
+    <li>For the second and third photos, turn your head a little, not your whole body.</li>
+  </ol>
+  <p class="muted" style="margin:10px 0 0">Photos must be JPEG. They are saved in a folder named with your register number, and each one is also stored as face data. A photo that is blurred, too small, or shows someone else is refused, and you can try again.</p>
+</div>
+</div>
+<div class="cam-modal" data-cam-modal hidden><div class="card">
+  <h2>Take a photo</h2>
+  <video autoplay playsinline muted></video>
+  <div class="form-actions"><button class="btn" type="button" data-cam-take><%- ui.icon('camera', 18) %>Take photo</button><button class="btn btn-quiet" type="button" data-cam-cancel>Cancel</button></div>
+</div></div>
+<% } %>
+<%- include('../partials/bottom') %>

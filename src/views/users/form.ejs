@@ -1,0 +1,32 @@
+<%- include('../partials/top') %>
+<% const u = editUser || {}; %>
+<div class="head"><div><h1><%= title %></h1><% if (!editUser) { %><p>The user gets a one-time password, shown to you once, and must change it at first sign-in.</p><% } %></div></div>
+<form class="card" method="post" action="<%= editUser ? '/users/' + u.user_id : '/users' %>">
+  <%- include('../partials/csrf') %>
+  <h2>Sign-in and name</h2>
+  <% if (!editUser) { %>
+    <div class="field"><label for="role">Role</label><select id="role" name="role" required><% creatable.forEach(function (r) { %><option value="<%= r %>"><%= ui.role(r) %></option><% }) %></select></div>
+    <div class="field"><label for="username">Username</label><input id="username" name="username" type="text" required><div class="hint">Unique within the college. Students usually use the register number.</div></div>
+  <% } else { %><p class="muted"><%= ui.role(u.role_name) %>, username <b><%= u.username %></b></p><% } %>
+  <div class="field"><label for="first_name">First name</label><input id="first_name" name="first_name" type="text" value="<%= u.first_name || '' %>" required></div>
+  <div class="field"><label for="last_name">Last name</label><input id="last_name" name="last_name" type="text" value="<%= u.last_name || '' %>"></div>
+  <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" value="<%= u.email || '' %>"><div class="hint">Needed for "Forgot your password".</div></div>
+  <div class="field"><label for="mobile">Mobile</label><input id="mobile" name="mobile" type="text" value="<%= u.mobile || '' %>"></div>
+  <% if (!editUser) { %>
+    <h2>For HOD and staff</h2>
+    <div class="field"><label for="department_id">Department</label><select id="department_id" name="department_id"><option value="">Choose</option><% departments.forEach(function (o) { %><option value="<%= o.value %>"><%= o.label %></option><% }) %></select></div>
+    <div class="field"><label for="staff_code">Staff code</label><input id="staff_code" name="staff_code" type="text"></div>
+    <div class="field"><label for="designation">Designation</label><input id="designation" name="designation" type="text"></div>
+    <h2>For students</h2>
+    <div class="field"><label for="section_id">Section</label><select id="section_id" name="section_id"><option value="">Choose</option><% sections.forEach(function (o) { %><option value="<%= o.value %>"><%= o.label %></option><% }) %></select></div>
+    <div class="field"><label for="university_id">University id</label><input id="university_id" name="university_id" type="text"><div class="hint">The id the recognition pipeline uses for this student.</div></div>
+    <div class="field"><label for="register_no">Register number</label><input id="register_no" name="register_no" type="text"></div>
+    <div class="field"><label for="roll_no">Roll number</label><input id="roll_no" name="roll_no" type="text"></div>
+    <div class="field"><label for="batch_year">Batch year</label><input id="batch_year" name="batch_year" type="number" min="1990" max="2100"></div>
+  <% } else { %>
+    <% if (u.staff_id) { %><div class="field"><label for="designation">Designation</label><input id="designation" name="designation" type="text" value="<%= u.designation || '' %>"></div><% } %>
+    <% if (u.student_id) { %><div class="field"><label for="roll_no">Roll number</label><input id="roll_no" name="roll_no" type="text" value="<%= u.roll_no || '' %>"></div><% } %>
+  <% } %>
+  <div class="form-actions"><button class="btn" type="submit"><%= editUser ? 'Save user' : 'Create user' %></button><a href="/users">Cancel</a></div>
+</form>
+<%- include('../partials/bottom') %>

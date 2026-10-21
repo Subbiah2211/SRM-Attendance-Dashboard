@@ -1,0 +1,10 @@
+<%# The camera chosen in the filter window: what it is seeing right now. %>
+<% if (camera) { %><div class="card flush">
+  <div class="card-head"><h2><%- ui.icon('camera', 18) %> <%= camera.room || camera.location_label %> <span class="muted">(<%= camera.camera_id %>)</span></h2>
+    <a class="btn btn-quiet btn-small" href="/cameras/view?camera_id=<%= encodeURIComponent(camera.camera_id) %>"><%- ui.icon('eye', 16) %>Open camera view</a></div>
+  <div class="pad">
+    <p><span class="chip chip-<%= camera.status === 'online' ? 'present' : camera.status === 'offline' ? 'absent' : 'none' %>"><%= camera.status ? camera.status[0].toUpperCase() + camera.status.slice(1) : 'No health report' %></span>
+      <% if (cameraActivity.now.length) { %> In the room now: <% cameraActivity.now.forEach(function (n, i) { %><%= i ? ', ' : '' %><b><%= n.short_name || n.subject_code %></b> <%= n.section_label %> (<%= n.staff_name %>)<% }) %>.<% } else { %> No class in this room right now.<% } %></p>
+    <p class="muted" style="margin:0"><%= cameraActivity.counts.students %> students recognised today in <%= cameraActivity.counts.events %> detections<%= cameraActivity.counts.last_at ? ', the last at ' + dates.fmtClock(cameraActivity.counts.last_at, my.timezone) : '' %>. The figures on this page cover only classes held in this camera's room.</p>
+  </div>
+</div><% } %>

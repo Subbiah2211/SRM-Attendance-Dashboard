@@ -1,0 +1,31 @@
+<%- include('../partials/top') %>
+<% const isStudent = user.role === 'student'; %>
+<div class="head"><div><h1>Attendance</h1><p><%= filters.from === filters.to ? dates.fmtDate(filters.from) : dates.fmtDate(filters.from) + ' to ' + dates.fmtDate(filters.to) %>. One row per class period.</p></div>
+  <div class="actions"><% if (can('attendance', 'export')) { %><a class="btn btn-quiet" href="/attendance/export<%= qs({ format: 'xlsx', page: null }) %>"><%- ui.icon('download', 18) %>Excel</a><a class="btn btn-quiet" href="/attendance/export<%= qs({ format: 'pdf', page: null }) %>"><%- ui.icon('file', 18) %>PDF</a><% } %></div></div>
+<form class="filters" method="get" action="/attendance">
+  <div><label for="from">From</label><input id="from" type="date" name="from" value="<%= filters.from %>" max="<%= filters.today %>"></div>
+  <div><label for="to">To</label><input id="to" type="date" name="to" value="<%= filters.to %>" max="<%= filters.today %>"></div>
+  <% if (options.sections.length > 1) { %><div class="wide"><label for="section_id">Class</label><select id="section_id" name="section_id"><option value="">All classes</option>
+    <% options.sections.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.section_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <% if (options.subjects.length) { %><div class="wide"><label for="subject_id">Subject</label><select id="subject_id" name="subject_id"><option value="">All subjects</option>
+    <% options.subjects.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.subject_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <% if (options.staff.length) { %><div class="wide"><label for="staff_id">Staff name</label><select id="staff_id" name="staff_id"><option value="">All staff</option>
+    <% options.staff.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.staff_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <% if (options.periods.length) { %><div><label for="period_id">Period</label><select id="period_id" name="period_id"><option value="">All periods</option>
+    <% options.periods.forEach(function (o) { %><option value="<%= o.value %>"<%= filters.period_id === o.value ? ' selected' : '' %>><%= o.label %></option><% }) %></select></div><% } %>
+  <% if (!isStudent) { %><div><label for="status">Period status</label><select id="status" name="status"><option value="">Any</option>
+    <% ['scheduled', 'closed', 'needs_manual'].forEach(function (s) { %><option value="<%= s %>"<%= filters.status === s ? ' selected' : '' %>><%= statusLabel[s] %></option><% }) %></select></div><% } %>
+  <div><button class="btn" type="submit">Apply</button> <a href="/attendance">Today</a></div>
+</form>
+<div class="card flush"><div class="scroll"><table class="data">
+  <thead><tr><th>When</th><th style="width:40%">Class, subject and staff</th>
+    <% if (isStudent) { %><th>My status</th><% } else { %><th class="num">Present</th><th class="num">Absent</th><th class="num">Not marked</th><th>Attendance</th><th>Status</th><% } %><th></th></tr></thead><tbody>
+  <% sessions.forEach(function (s) { %><tr>
+    <td class="nw"><b><%= dates.fmtDate(s.session_date) %></b><br><span class="muted">Period <%= s.period_no %>, <%= dates.fmtTime(s.start_time) %> to <%= dates.fmtTime(s.end_time) %></span></td>
+    <td><b class="nw"><%= s.section_label %></b><br><span class="muted"><%= s.subject_code %> <%= s.subject_name %>, <%= s.staff_name %><%= s.staff_id !== s.scheduled_staff_id ? ' (substitute)' : '' %></span></td>
+    <% if (isStudent) { %><td><%- s.my_status ? ui.status(s.my_status) : (s.status === 'closed' ? ui.status(null) : '<span class="muted">Not closed yet</span>') %></td>
+    <% } else { %><td class="num"><b><%= s.present %></b><% if (s.late) { %><br><span class="muted"><%= s.late %> late</span><% } %></td><td class="num"><%= s.absent %></td><td class="num"><%= s.strength - s.marked %></td><td><%- ui.pct(s.percentage) %></td><td><%- ui.session(s.status) %></td><% } %>
+    <td class="num"><a class="btn btn-quiet btn-small" href="/attendance/sessions/<%= s.timetable_id %>/<%= s.session_date %>"><%= isStudent ? 'Detail' : 'Students' %></a></td></tr><% }) %>
+  <% if (!sessions.length) { %><tr><td colspan="8" class="empty">No class periods match. The date may be a holiday or a Sunday, or no timetable covers these filters.</td></tr><% } %>
+  </tbody></table></div><%- include('../partials/pager') %></div>
+<%- include('../partials/bottom') %>
